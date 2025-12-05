@@ -74,5 +74,53 @@ namespace Monster_University_GR2.CapaDatos
                 }
             }
         }
+        // ... imports ...
+
+        public bool RestablecerClave(string correo, string claveHasheada, out string mensaje)
+        {
+            mensaje = string.Empty;
+            using (var db = new MonsterContext())
+            {
+                try
+                {
+                    // 1. Buscar usuario por correo (Login = Correo en nuestro sistema)
+                    // OJO: También buscamos en la tabla Persona por si acaso
+                    var usuario = db.XeusuUsuars
+                                    .FirstOrDefault(u => u.XeusuLogin == correo);
+
+                    if (usuario == null)
+                    {
+                        // Intento buscar por el email de la persona si no lo encuentro por login
+                        var persona = db.PeperPers.FirstOrDefault(p => p.PeperEmail == correo);
+                        if (persona != null)
+                        {
+                            usuario = db.XeusuUsuars.FirstOrDefault(u => u.PeperCodigo == persona.PeperCodigo);
+                        }
+                    }
+
+                    if (usuario == null)
+                    {
+                        mensaje = "No se encontró ningún usuario asociado a este correo.";
+                        return false;
+                    }
+
+                    // 2. Actualizar datos
+                    usuario.XeusuPaswd = claveHasheada;
+                    usuario.XeusuCambiarPwd = "S"; // ¡IMPORTANTE! Forzar cambio
+                    usuario.XeusuFecmod = DateTime.Now;
+
+                    // 3. Guardar cambios
+                    db.Entry(usuario).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                    db.SaveChanges();
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    mensaje = "Error al restablecer: " + ex.Message;
+                    return false;
+                }
+            }
+        }
     }
 }

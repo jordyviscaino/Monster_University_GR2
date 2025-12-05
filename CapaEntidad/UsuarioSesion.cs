@@ -11,5 +11,6 @@
         public string? RolCodigo { get; set; }   // PEROL_CODIGO (Puede ser null)
         public string? DepartamentoCodigo { get; set; }
         public string? CodigoEstudiante { get; set; }
+        public string DebeCambiarPassword { get; set; }
     }
 }

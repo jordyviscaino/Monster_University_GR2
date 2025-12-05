@@ -69,7 +69,8 @@ namespace Monster_University_GR2.CapaNegocio
                 XeestCodigo = "A", // Activo
                 XeusuFeccre = DateTime.Now,
                 XeusuFecmod = DateTime.Now,
-                XeusuPiefir = "WEB_NET8"
+                XeusuPiefir = "WEB_NET8",
+                XeusuCambiarPwd = "N"
             };
 
             // 3. Llamar a Capa Datos
@@ -86,5 +87,61 @@ namespace Monster_University_GR2.CapaNegocio
                 return BitConverter.ToString(hash).Replace("-", "").ToLower();
             }
         }
+        // ... dentro de la clase CN_Usuario ...
+
+        public bool RecuperarContrasena(string correo, out string mensaje)
+        {
+            // 1. Generar contraseña aleatoria de 6 caracteres
+            string claveTemporal = GenerarClaveAleatoria();
+
+            // 2. Encriptar para guardar en BD
+            string claveHash = GenerarSHA256(claveTemporal);
+
+            // 3. Actualizar en Base de Datos
+            bool resultado = objCapaDato.RestablecerClave(correo, claveHash, out mensaje);
+
+            if (resultado)
+            {
+                // 4. Si se guardó en BD, enviar el correo con la clave PLANA (sin hash)
+                string asunto = "Recuperación de Contraseña - Monster University";
+                string cuerpo = $@"
+            <h3>Hola, estudiante de Monster University</h3>
+            <p>Has solicitado restablecer tu contraseña.</p>
+            <p>Tu contraseña temporal es: <strong>{claveTemporal}</strong></p>
+            <p style='color:red'>Por seguridad, el sistema te pedirá cambiarla inmediatamente al iniciar sesión.</p>
+            <br/>
+            <p>Atte,<br/>Equipo de Sistemas</p>";
+
+                bool correoEnviado = CN_Correo.Enviar(correo, asunto, cuerpo);
+
+                if (!correoEnviado)
+                {
+                    mensaje = "La contraseña se restableció, pero hubo un error enviando el correo. Contacte a soporte.";
+                    return false;
+                }
+                return true;
+            }
+            else
+            {
+                // El mensaje de error ya viene desde CapaDatos
+                return false;
+            }
+        }
+
+        // Método auxiliar para generar texto aleatorio
+        private string GenerarClaveAleatoria()
+        {
+            string caracteres = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            int longitud = 6;
+            char[] clave = new char[longitud];
+            Random random = new Random();
+
+            for (int i = 0; i < longitud; i++)
+            {
+                clave[i] = caracteres[random.Next(caracteres.Length)];
+            }
+            return new string(clave);
+        }
+
     }
 }

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Monster_University_GR2.CapaEntidad;
 
 /// <summary>
-/// Entidad relacionada para gentionar los usuario que ingrsan al sistema
+/// Entidad relacionada para gestionar los usuarios que ingresan al sistema
 /// </summary>
 [Table("XEUSU_USUAR")]
 [Index("PeperCodigo", Name = "XR_PEPER_XEUSU_FK")]
@@ -46,6 +46,7 @@ public partial class XeusuUsuar
     [Unicode(false)]
     public string XeusuPiefir { get; set; } = null!;
 
+    // Veo que ya tenías los tokens listos, excelente.
     [Column("XEUSU_TOKEN_REC")]
     [StringLength(100)]
     [Unicode(false)]
@@ -53,6 +54,12 @@ public partial class XeusuUsuar
 
     [Column("XEUSU_FEC_EXP_TOK", TypeName = "datetime")]
     public DateTime? XeusuFecExpTok { get; set; }
+
+    [Column("XEUSU_CAMBIAR_PWD")]
+    [StringLength(1)]
+    [Unicode(false)]
+    // Inicializar con "N" para que nunca sea null por defecto
+    public string XeusuCambiarPwd { get; set; } = "N";
 
     [ForeignKey("PeperCodigo")]
     [InverseProperty("XeusuUsuars")]

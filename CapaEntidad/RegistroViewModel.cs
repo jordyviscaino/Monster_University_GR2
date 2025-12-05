@@ -5,44 +5,38 @@ namespace Monster_University_GR2.CapaEntidad
 {
     public class RegistroViewModel
     {
-        // --- CÉDULA ---
+        // --- CÉDULA (Ya la tenías) ---
         [Required(ErrorMessage = "La cédula es obligatoria")]
-        // Quitamos el Regex simple y ponemos nuestra validación completa:
-        [CedulaEcuador(ErrorMessage = "La cédula ingresada no es válida.")]
+        [CedulaEcuador(ErrorMessage = "La cédula no es válida (algoritmo Ecuador).")]
         public string Cedula { get; set; }
 
-        // --- NOMBRES Y APELLIDOS ---
+        // --- NOMBRES (Nueva Validación) ---
         [Required(ErrorMessage = "El nombre es obligatorio")]
-        [StringLength(50, ErrorMessage = "El nombre es muy largo")]
-        [RegularExpression(@"^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$", ErrorMessage = "El nombre solo debe contener letras.")]
+        [DosPalabras(ErrorMessage = "Debe ingresar sus dos nombres (Ej: Juan Carlos)")]
         public string Nombre { get; set; }
 
+        // --- APELLIDOS (Nueva Validación) ---
         [Required(ErrorMessage = "El apellido es obligatorio")]
-        [StringLength(50, ErrorMessage = "El apellido es muy largo")]
-        [RegularExpression(@"^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$", ErrorMessage = "El apellido solo debe contener letras.")]
+        [DosPalabras(ErrorMessage = "Debe ingresar sus dos apellidos (Ej: Pérez López)")]
         public string Apellido { get; set; }
 
-        // --- CORREO ---
+        // --- CORREO (Nueva Validación) ---
         [Required(ErrorMessage = "El correo es obligatorio")]
-        [EmailAddress(ErrorMessage = "El formato del correo no es válido")]
+        [DominioCorreo(ErrorMessage = "El dominio del correo no parece válido.")]
         public string Email { get; set; }
 
-        // --- COMBOS ---
+        // ... El resto sigue igual (Sexos, Password, etc.) ...
         [Required(ErrorMessage = "Seleccione el género")]
         public string SexoCodigo { get; set; }
 
         [Required(ErrorMessage = "Seleccione el estado civil")]
         public string EstadoCivilCodigo { get; set; }
 
-        // --- CONTRASEÑA ---
         [Required(ErrorMessage = "La contraseña es obligatoria")]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres.")]
-        [DataType(DataType.Password)]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Mínimo 6 caracteres")]
         public string Password { get; set; }
 
-        [DataType(DataType.Password)]
-        [Display(Name = "Confirmar contraseña")]
-        [Compare("Password", ErrorMessage = "Las contraseñas no coinciden.")]
+        [Compare("Password", ErrorMessage = "Las contraseñas no coinciden")]
         public string ConfirmPassword { get; set; }
     }
 }

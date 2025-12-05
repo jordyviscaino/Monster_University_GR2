@@ -22,16 +22,26 @@ namespace Monster_University_GR2.Controllers
         [HttpPost]
         public IActionResult Login(string userLogin, string passLogin)
         {
-            // 1. Instanciar la Capa de Negocio
             CN_Usuario logica = new CN_Usuario();
 
-            // 2. Llamar al método de validación
+            // 1. Validar credenciales
             UsuarioSesion usuario = logica.ValidarUsuario(userLogin, passLogin);
 
             if (usuario != null)
             {
-                // 3. ¡ÉXITO! Guardar en Sesión
-                // En .NET 8 Session guarda bytes o strings, así que serializamos a JSON
+                // === NUEVA LÓGICA DE SEGURIDAD ===
+                // Verificar si tiene la bandera de "Cambiar Contraseña" activa ('S')
+                if (usuario.DebeCambiarPassword == "S")
+                {
+                    // OJO: Aún no creamos esta vista, pero preparémoslo.
+                    // Guardamos el correo en TempData para saber a quién cambiarle la clave
+                    TempData["CorreoCambio"] = usuario.Email;
+
+                    return RedirectToAction("CambiarClave", "Access");
+                }
+                // =================================
+
+                // Si no tiene bandera, flujo normal (Dashboard)
                 string usuarioJson = JsonSerializer.Serialize(usuario);
                 HttpContext.Session.SetString("UsuarioSesion", usuarioJson);
 
@@ -39,11 +49,10 @@ namespace Monster_University_GR2.Controllers
             }
             else
             {
-                // 4. Fallo
                 ViewBag.Error = "Credenciales incorrectas o usuario inactivo.";
                 return View();
             }
-        }
+        } 
 
         public IActionResult Logout()
         {
@@ -89,6 +98,35 @@ namespace Monster_University_GR2.Controllers
             ViewBag.ListaEstadoCivil = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(logica.ListarEstados(), "PeescCodigo", "PeescDescri");
 
             return View(modelo);
+        }
+        // GET: Access/Recuperar
+        public IActionResult Recuperar()
+        {
+            return View();
+        }
+
+        // POST: Access/Recuperar
+        [HttpPost]
+        public IActionResult Recuperar(string correo)
+        {
+            CN_Usuario logica = new CN_Usuario();
+            string mensaje = "";
+
+            // Llamamos a la lógica que genera la clave, guarda en BD y envía el correo
+            bool resultado = logica.RecuperarContrasena(correo, out mensaje);
+
+            if (resultado)
+            {
+                // Éxito: Mostramos mensaje verde y dejamos el campo limpio
+                ViewBag.Exito = "Se ha enviado una contraseña temporal a tu correo. Revísalo (incluso SPAM).";
+                return View();
+            }
+            else
+            {
+                // Error: Mostramos mensaje rojo
+                ViewBag.Error = mensaje;
+                return View();
+            }
         }
     }
 }
