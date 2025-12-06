@@ -91,56 +91,54 @@ namespace Monster_University_GR2.CapaNegocio
 
         public bool RecuperarContrasena(string correo, out string mensaje)
         {
-            // 1. Generar contraseña aleatoria de 6 caracteres
+            // 1. Generar Clave Temporal (Ej: A7x#9m)
             string claveTemporal = GenerarClaveAleatoria();
 
-            // 2. Encriptar para guardar en BD
+            // 2. Encriptar (SHA256) para la Base de Datos
             string claveHash = GenerarSHA256(claveTemporal);
 
-            // 3. Actualizar en Base de Datos
+            // 3. Guardar en Base de Datos
             bool resultado = objCapaDato.RestablecerClave(correo, claveHash, out mensaje);
 
             if (resultado)
             {
-                // 4. Si se guardó en BD, enviar el correo con la clave PLANA (sin hash)
-                string asunto = "Recuperación de Contraseña - Monster University";
+                // 4. Enviar Correo con la Clave TEMPORAL (Plana)
+                string asunto = "Restablecer Contraseña - Monster University";
                 string cuerpo = $@"
-            <h3>Hola, estudiante de Monster University</h3>
-            <p>Has solicitado restablecer tu contraseña.</p>
-            <p>Tu contraseña temporal es: <strong>{claveTemporal}</strong></p>
-            <p style='color:red'>Por seguridad, el sistema te pedirá cambiarla inmediatamente al iniciar sesión.</p>
-            <br/>
-            <p>Atte,<br/>Equipo de Sistemas</p>";
+                    <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd;'>
+                        <h2 style='color: #004aad;'>Recuperación de Acceso</h2>
+                        <p>Hola,</p>
+                        <p>Se ha solicitado restablecer tu contraseña para el Sistema Académico.</p>
+                        <p>Tu contraseña temporal es: <strong style='font-size: 1.2em; background-color: #f0f0f0; padding: 5px;'>{claveTemporal}</strong></p>
+                        <p style='color: red;'>Por seguridad, deberás cambiarla inmediatamente al iniciar sesión.</p>
+                        <hr />
+                        <small>Si no solicitaste esto, comunícate con soporte.</small>
+                    </div>";
 
-                bool correoEnviado = CN_Correo.Enviar(correo, asunto, cuerpo);
+                string errorCorreo = "";
+                bool correoEnviado = CN_Correo.Enviar(correo, asunto, cuerpo, out errorCorreo);
 
                 if (!correoEnviado)
                 {
-                    mensaje = "La contraseña se restableció, pero hubo un error enviando el correo. Contacte a soporte.";
+                    mensaje = "La clave se cambió, pero falló el envío del correo: " + errorCorreo;
                     return false;
                 }
                 return true;
             }
-            else
-            {
-                // El mensaje de error ya viene desde CapaDatos
-                return false;
-            }
+            return false;
         }
 
-        // Método auxiliar para generar texto aleatorio
+        // Auxiliar para generar clave aleatoria de 6 dígitos
         private string GenerarClaveAleatoria()
         {
-            string caracteres = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            int longitud = 6;
-            char[] clave = new char[longitud];
+            string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             Random random = new Random();
-
-            for (int i = 0; i < longitud; i++)
+            char[] result = new char[6];
+            for (int i = 0; i < result.Length; i++)
             {
-                clave[i] = caracteres[random.Next(caracteres.Length)];
+                result[i] = chars[random.Next(chars.Length)];
             }
-            return new string(clave);
+            return new string(result);
         }
 
     }

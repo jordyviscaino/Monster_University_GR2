@@ -100,6 +100,7 @@ namespace Monster_University_GR2.Controllers
             return View(modelo);
         }
         // GET: Access/Recuperar
+        // GET: Access/Recuperar
         public IActionResult Recuperar()
         {
             return View();
@@ -112,21 +113,18 @@ namespace Monster_University_GR2.Controllers
             CN_Usuario logica = new CN_Usuario();
             string mensaje = "";
 
-            // Llamamos a la lógica que genera la clave, guarda en BD y envía el correo
-            bool resultado = logica.RecuperarContrasena(correo, out mensaje);
+            bool respuesta = logica.RecuperarContrasena(correo, out mensaje);
 
-            if (resultado)
+            if (respuesta)
             {
-                // Éxito: Mostramos mensaje verde y dejamos el campo limpio
-                ViewBag.Exito = "Se ha enviado una contraseña temporal a tu correo. Revísalo (incluso SPAM).";
-                return View();
+                ViewBag.Exito = "Correo enviado exitosamente. Revisa tu bandeja de entrada.";
             }
             else
             {
-                // Error: Mostramos mensaje rojo
                 ViewBag.Error = mensaje;
-                return View();
             }
+
+            return View();
         }
     }
 }

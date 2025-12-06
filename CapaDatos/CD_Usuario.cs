@@ -83,14 +83,12 @@ namespace Monster_University_GR2.CapaDatos
             {
                 try
                 {
-                    // 1. Buscar usuario por correo (Login = Correo en nuestro sistema)
-                    // OJO: También buscamos en la tabla Persona por si acaso
-                    var usuario = db.XeusuUsuars
-                                    .FirstOrDefault(u => u.XeusuLogin == correo);
+                    // 1. Buscar Usuario (Por Login o por Correo de Persona)
+                    var usuario = db.XeusuUsuars.FirstOrDefault(u => u.XeusuLogin == correo);
 
                     if (usuario == null)
                     {
-                        // Intento buscar por el email de la persona si no lo encuentro por login
+                        // Si no está por login, buscamos en la tabla Persona
                         var persona = db.PeperPers.FirstOrDefault(p => p.PeperEmail == correo);
                         if (persona != null)
                         {
@@ -100,16 +98,16 @@ namespace Monster_University_GR2.CapaDatos
 
                     if (usuario == null)
                     {
-                        mensaje = "No se encontró ningún usuario asociado a este correo.";
+                        mensaje = "No se encontró un usuario con ese correo.";
                         return false;
                     }
 
-                    // 2. Actualizar datos
+                    // 2. Actualizar Datos
                     usuario.XeusuPaswd = claveHasheada;
-                    usuario.XeusuCambiarPwd = "S"; // ¡IMPORTANTE! Forzar cambio
+                    usuario.XeusuCambiarPwd = "S"; // <--- BANDERA IMPORTANTE
                     usuario.XeusuFecmod = DateTime.Now;
 
-                    // 3. Guardar cambios
+                    // 3. Guardar
                     db.Entry(usuario).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
                     db.SaveChanges();
 
@@ -117,7 +115,7 @@ namespace Monster_University_GR2.CapaDatos
                 }
                 catch (Exception ex)
                 {
-                    mensaje = "Error al restablecer: " + ex.Message;
+                    mensaje = "Error en BD: " + ex.Message;
                     return false;
                 }
             }
