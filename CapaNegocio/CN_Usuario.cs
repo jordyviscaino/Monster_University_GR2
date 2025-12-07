@@ -140,6 +140,15 @@ namespace Monster_University_GR2.CapaNegocio
             }
             return new string(result);
         }
+        // ...
+        public bool CambiarClaveObligatoria(string correo, string nuevaClave, out string mensaje)
+        {
+            // 1. Encriptar la nueva clave que escribió el usuario
+            string hash = GenerarSHA256(nuevaClave);
+
+            // 2. Mandar a actualizar
+            return objCapaDato.ActualizarPassword(correo, hash, out mensaje);
+        }
 
     }
 }

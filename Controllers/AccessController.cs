@@ -126,5 +126,53 @@ namespace Monster_University_GR2.Controllers
 
             return View();
         }
+        // GET: Access/CambiarClave
+        public IActionResult CambiarClave()
+        {
+            // Recuperamos el correo que guardamos en el Login
+            if (TempData["CorreoCambio"] == null)
+            {
+                // Si intenta entrar directo por URL sin pasar por login, lo botamos
+                return RedirectToAction("Login");
+            }
+
+            string correo = TempData["CorreoCambio"].ToString();
+
+            // Pasamos el modelo con el correo cargado
+            CambiarClaveViewModel modelo = new CambiarClaveViewModel
+            {
+                Email = correo
+            };
+
+            // OJO: TempData se borra al leerse. Si la validación falla en el POST, 
+            // necesitamos mantener el correo, así que lo guardamos en el modelo (input hidden).
+            return View(modelo);
+        }
+
+        // POST: Access/CambiarClave
+        [HttpPost]
+        public IActionResult CambiarClave(CambiarClaveViewModel modelo)
+        {
+            if (ModelState.IsValid)
+            {
+                CN_Usuario logica = new CN_Usuario();
+                string mensaje = "";
+
+                bool resultado = logica.CambiarClaveObligatoria(modelo.Email, modelo.NewPassword, out mensaje);
+
+                if (resultado)
+                {
+                    ViewBag.Exito = "Contraseña actualizada correctamente. Inicia sesión con tu nueva clave.";
+                    // Limpiamos sesión por seguridad y mandamos al login
+                    return View("Login");
+                }
+                else
+                {
+                    ViewBag.Error = mensaje;
+                }
+            }
+
+            return View(modelo);
+        }
     }
 }

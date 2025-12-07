@@ -120,5 +120,37 @@ namespace Monster_University_GR2.CapaDatos
                 }
             }
         }
+        // ...
+        public bool ActualizarPassword(string correo, string nuevaClaveHash, out string mensaje)
+        {
+            mensaje = string.Empty;
+            using (var db = new MonsterContext())
+            {
+                try
+                {
+                    var usuario = db.XeusuUsuars.FirstOrDefault(u => u.XeusuLogin == correo);
+
+                    if (usuario == null)
+                    {
+                        mensaje = "Usuario no encontrado.";
+                        return false;
+                    }
+
+                    usuario.XeusuPaswd = nuevaClaveHash;
+                    usuario.XeusuCambiarPwd = "N"; // ¡IMPORTANTE! Apagamos la obligación
+                    usuario.XeusuFecmod = DateTime.Now;
+
+                    db.Entry(usuario).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                    db.SaveChanges();
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    mensaje = "Error al actualizar: " + ex.Message;
+                    return false;
+                }
+            }
+        }
     }
 }
