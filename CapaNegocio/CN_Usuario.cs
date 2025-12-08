@@ -149,6 +149,103 @@ namespace Monster_University_GR2.CapaNegocio
             // 2. Mandar a actualizar
             return objCapaDato.ActualizarPassword(correo, hash, out mensaje);
         }
+        // ...
+        public bool RegistrarUsuarioAdmin(UsuarioCrearViewModel modelo, out string mensaje)
+        {
+            // 1. Mapeo COMPLETO de Persona (Todos los campos de la tabla)
+            PeperPer persona = new PeperPer
+            {
+                PeperCodigo = modelo.Cedula,
+                PeperCedula = modelo.Cedula,
+                PeperNombre = modelo.Nombre.ToUpper(),
+                PeperApellido = modelo.Apellido.ToUpper(),
+                PeperEmail = modelo.Email,
 
+                // Campos Nuevos mapeados:
+                PeperFechanaci = modelo.FechaNacimiento,
+                PeperDireccion = modelo.Direccion.ToUpper(),
+                PeperCelular = modelo.Celular,
+                PeperTeldom = modelo.TelefonoDomicilio ?? "0000000", // Manejo de nulos
+                PeperCargas = modelo.CargasFamiliares,
+
+                PsexCodigo = modelo.SexoCodigo,
+                PeescCodigo = modelo.EstadoCivilCodigo
+            };
+
+            // 2. Mapeo de Usuario
+            XeusuUsuar usuario = new XeusuUsuar
+            {
+                XeusuLogin = modelo.Email,
+                XeusuPaswd = GenerarSHA256(modelo.Password),
+                XeestCodigo = "A", // Activo
+                XeusuFeccre = DateTime.Now,
+                XeusuFecmod = DateTime.Now,
+                XeusuPiefir = "ADMIN_CRUD", // Auditoría: Lo creó un Admin
+                XeusuCambiarPwd = "S" // OJO: Al crearlo el Admin, forzamos cambio al usuario
+            };
+
+            // 3. Reutilizamos el método de inserción de Datos
+            return objCapaDato.RegistrarUsuario(persona, usuario, out mensaje);
+        }
+        // ...
+        public List<UsuarioResumenViewModel> ObtenerListaUsuarios()
+        {
+            return objCapaDato.ListarUsuarios();
+        }
+        // ...
+        public UsuarioEditarViewModel ObtenerParaEditar(string cedula)
+        {
+            var datos = objCapaDato.ObtenerUsuarioCompleto(cedula);
+            if (datos == null) return null;
+
+            // Convertimos del modelo "Crear" al modelo "Editar"
+            return new UsuarioEditarViewModel
+            {
+                Cedula = datos.Cedula,
+                Nombre = datos.Nombre,
+                Apellido = datos.Apellido,
+                Email = datos.Email,
+                FechaNacimiento = datos.FechaNacimiento,
+                Direccion = datos.Direccion,
+                Celular = datos.Celular,
+                TelefonoDomicilio = datos.TelefonoDomicilio,
+                CargasFamiliares = datos.CargasFamiliares,
+                SexoCodigo = datos.SexoCodigo,
+                EstadoCivilCodigo = datos.EstadoCivilCodigo,
+                EstadoUsuario = datos.Password // Recuerda que en CD pasamos el estado aquí
+            };
+        }
+
+        public bool Editar(UsuarioEditarViewModel modelo, out string mensaje)
+        {
+            // Mapeo inverso: ViewModel -> Entidad
+            PeperPer persona = new PeperPer
+            {
+                PeperCodigo = modelo.Cedula,
+                PeperNombre = modelo.Nombre.ToUpper(),
+                PeperApellido = modelo.Apellido.ToUpper(),
+                PeperEmail = modelo.Email,
+                PeperFechanaci = modelo.FechaNacimiento,
+                PeperDireccion = modelo.Direccion.ToUpper(),
+                PeperCelular = modelo.Celular,
+                PeperTeldom = modelo.TelefonoDomicilio,
+                PeperCargas = modelo.CargasFamiliares,
+                PsexCodigo = modelo.SexoCodigo,
+                PeescCodigo = modelo.EstadoCivilCodigo
+            };
+
+            XeusuUsuar usuario = new XeusuUsuar
+            {
+                XeusuLogin = modelo.Email,
+                XeestCodigo = modelo.EstadoUsuario
+            };
+
+            return objCapaDato.EditarUsuario(persona, usuario, out mensaje);
+        }
+
+        public bool Eliminar(string cedula, out string mensaje)
+        {
+            return objCapaDato.DarDeBajaUsuario(cedula, out mensaje);
+        }
     }
 }

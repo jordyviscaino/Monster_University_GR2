@@ -1,0 +1,67 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model Monster_University_GR2.CapaEntidad.UsuarioEditarViewModel
+@{
+    ViewBag.Title = "Detalles de Usuario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-info text-white d-flex justify-content-between">
+        <h5 class="mb-0"><i class="fas fa-id-card"></i> Ficha de Usuario</h5>
+        <a href="@Url.Action("Index")" class="btn btn-light btn-sm text-dark"><i class="fas fa-arrow-left"></i> Volver</a>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-2 text-center">
+                <i class="fas fa-user-circle fa-6x text-secondary"></i>
+                <br />
+                <span class="badge bg-secondary mt-2">@Model.Cedula</span>
+            </div>
+            <div class="col-md-10">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="fw-bold">Nombres Completos</label>
+                        <p class="form-control-plaintext border-bottom">@Model.Nombre @Model.Apellido</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="fw-bold">Correo (Login)</label>
+                        <p class="form-control-plaintext border-bottom">@Model.Email</p>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="fw-bold">Fecha Nacimiento</label>
+                        <p class="form-control-plaintext border-bottom">@Model.FechaNacimiento.ToShortDateString()</p>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="fw-bold">Celular</label>
+                        <p class="form-control-plaintext border-bottom">@Model.Celular</p>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="fw-bold">Estado</label>
+                        <p>
+                            @if (Model.EstadoUsuario == "A")
+                            {
+                                <span class="badge bg-success">ACTIVO</span>
+                            }
+                            else
+                            {
+
+                                <span class="badge bg-danger">INACTIVO</span>
+                            }
+                        </p>
+                    </div>
+                    <div class="col-12">
+                        <label class="fw-bold">Dirección</label>
+                        <p class="form-control-plaintext border-bottom">@Model.Direccion</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-end mt-3">
+            <a href="@Url.Action("Editar", new { id = Model.Cedula })" class="btn btn-primary">
+                <i class="fas fa-pen"></i> Editar Información
+            </a>
+        </div>
+    </div>
+</div>

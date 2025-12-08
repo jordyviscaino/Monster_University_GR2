@@ -1,0 +1,151 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewBag.Title = "Asignación de Perfiles";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="fas fa-user-shield"></i> Asignación de Perfiles y Roles</h5>
+    </div>
+    <div class="card-body">
+
+        <div class="row mb-4">
+            <div class="col-md-6 offset-md-3">
+                <label class="form-label fw-bold">Seleccione el Perfil a gestionar:</label>
+                <select id="cboRol" class="form-select form-select-lg" asp-items="ViewBag.ListaRoles">
+                    <option value="">-- Seleccione un Rol --</option>
+                </select>
+            </div>
+        </div>
+
+        <hr />
+
+        <div class="row align-items-center">
+
+            <div class="col-md-5">
+                <h6 class="text-center text-muted">Usuarios Disponibles</h6>
+                <div class="card">
+                    <div class="card-body p-0" style="height: 300px; overflow-y: auto;">
+                        <table class="table table-hover table-sm mb-0" id="tablaDisponibles">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-2 text-center">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-secondary" disabled>
+                        <i class="fas fa-exchange-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <h6 class="text-center text-success fw-bold">Usuarios Asignados</h6>
+                <div class="card border-success">
+                    <div class="card-body p-0" style="height: 300px; overflow-y: auto;">
+                        <table class="table table-hover table-sm mb-0" id="tablaAsignados">
+                            <thead class="table-success sticky-top">
+                                <tr>
+                                    <th>Acción</th>
+                                    <th>Usuario</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const cboRol = document.getElementById("cboRol");        const tablaDisponibles = document.querySelector("#tablaDisponibles tbody");
+        const tablaAsignados = document.querySelector("#tablaAsignados tbody");
+
+        // Al cambiar el combo, cargamos las tablas
+        cboPerfil.addEventListener("change", function() {
+            cargarTablas();
+        });
+
+        function cargarTablas() {
+            const idPerfil = cboPerfil.value;
+            if(!idPerfil) {
+                tablaDisponibles.innerHTML = "";
+                tablaAsignados.innerHTML = "";
+                return;
+            }
+
+        fetch(`@Url.Action("ObtenerTablas")?idPerfil=${cboRol.value}`)                .then(response => response.json())
+                .then(data => {
+                    pintarTabla(tablaDisponibles, data.disponibles, true);
+                    pintarTabla(tablaAsignados, data.asignados, false);
+                });
+        }
+
+        function pintarTabla(tbody, datos, esDisponible) {
+            tbody.innerHTML = "";
+            datos.forEach(item => {
+                const fila = document.createElement("tr");
+
+                // Botón de acción (Flecha)
+                const btnAccion = document.createElement("button");
+                btnAccion.className = esDisponible ? "btn btn-sm btn-primary" : "btn btn-sm btn-danger";
+                btnAccion.innerHTML = esDisponible ? '<i class="fas fa-arrow-right"></i>' : '<i class="fas fa-arrow-left"></i>';
+                btnAccion.onclick = () => procesarMovimiento(item.login, esDisponible);
+
+                const celdaBoton = document.createElement("td");
+                celdaBoton.appendChild(btnAccion);
+                celdaBoton.style.width = "50px";
+                celdaBoton.className = "text-center";
+
+                const celdaTexto = document.createElement("td");
+                celdaTexto.innerHTML = `<strong>${item.nombreCompleto}</strong><br/><small class="text-muted">${item.login}</small>`;
+
+                if(esDisponible) {
+                    fila.appendChild(celdaTexto);
+                    fila.appendChild(celdaBoton);
+                } else {
+                    fila.appendChild(celdaBoton);
+                    fila.appendChild(celdaTexto);
+                }
+                tbody.appendChild(fila);
+            });
+        }
+
+        function procesarMovimiento(login, esAsignacion) {
+            const idPerfil = cboPerfil.value;
+            const url = esAsignacion ? '@Url.Action("Asignar")' : '@Url.Action("Desasignar")';
+
+            // FormData para enviar POST
+            const formData = new FormData();
+            formData.append("login", login);
+            formData.append("idPerfil", idPerfil);
+
+            fetch(url, { method: "POST", body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.exito) {
+                        cargarTablas(); // Recargar para ver el cambio
+                    } else {
+                        alert("Error al procesar la solicitud.");
+                    }
+                });
+        }
+    </script>
+}

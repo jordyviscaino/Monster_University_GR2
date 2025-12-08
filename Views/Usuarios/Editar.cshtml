@@ -1,0 +1,50 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model Monster_University_GR2.CapaEntidad.UsuarioEditarViewModel
+@{
+    ViewBag.Title = "Editar Usuario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-user-edit"></i> Editar Usuario</h5>
+    </div>
+    <div class="card-body">
+        <form asp-action="Editar" method="post" class="row g-3">
+
+            <input type="hidden" asp-for="Cedula" />
+
+            <div class="col-md-4">
+                <label class="form-label">Cédula</label>
+                <input value="@Model.Cedula" class="form-control" disabled readonly />
+                <div class="form-text">No se puede editar.</div>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Nombres</label>
+                <input asp-for="Nombre" class="form-control" />
+                <span asp-validation-for="Nombre" class="text-danger small"></span>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Apellidos</label>
+                <input asp-for="Apellido" class="form-control" />
+                <span asp-validation-for="Apellido" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold text-primary">Estado Sistema</label>
+                <select asp-for="EstadoUsuario" class="form-select">
+                    <option value="A">ACTIVO</option>
+                    <option value="I">INACTIVO</option>
+                </select>
+            </div>
+
+            <div class="col-12 mt-4 text-end">
+                <a href="@Url.Action("Index")" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -2,6 +2,7 @@
 using Monster_University_GR2.CapaEntidad;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace Monster_University_GR2.CapaDatos
 {
@@ -148,6 +149,141 @@ namespace Monster_University_GR2.CapaDatos
                 catch (Exception ex)
                 {
                     mensaje = "Error al actualizar: " + ex.Message;
+                    return false;
+                }
+            }
+        }
+
+public List<UsuarioResumenViewModel> ListarUsuarios()
+    {
+        using (var db = new MonsterContext())
+        {
+            // LINQ con JOIN implícito (Include)
+            var lista = db.XeusuUsuars
+                          .Include(u => u.PeperCodigoNavigation) // Join con Persona
+                          .Select(u => new UsuarioResumenViewModel
+                          {
+                              Cedula = u.PeperCodigo,
+                              // Concatenamos nombre y apellido
+                              NombreCompleto = u.PeperCodigoNavigation.PeperNombre + " " + u.PeperCodigoNavigation.PeperApellido,
+                              Email = u.XeusuLogin,
+                              Estado = u.XeestCodigo,
+                              FechaRegistro = u.XeusuFeccre,
+                              Rol = "N/A" // Lo ajustaremos cuando integremos perfiles
+                          })
+                          .ToList();
+
+            return lista;
+        }
+    }
+        // ... imports ...
+
+        // 1. OBTENER UN USUARIO ESPECÍFICO (Para Ver Detalle y para cargar el Editar)
+        public UsuarioCrearViewModel ObtenerUsuarioCompleto(string cedula)
+        {
+            using (var db = new MonsterContext())
+            {
+                // Buscamos la persona y su usuario asociado
+                var persona = db.PeperPers.FirstOrDefault(p => p.PeperCodigo == cedula);
+                var usuario = db.XeusuUsuars.FirstOrDefault(u => u.PeperCodigo == cedula);
+
+                if (persona == null || usuario == null) return null;
+
+                // Mapeamos a un ViewModel lleno (Usamos el de Crear porque tiene todos los campos)
+                return new UsuarioCrearViewModel
+                {
+                    Cedula = persona.PeperCedula,
+                    Nombre = persona.PeperNombre,
+                    Apellido = persona.PeperApellido,
+                    Email = usuario.XeusuLogin,
+                    FechaNacimiento = persona.PeperFechanaci,
+                    Direccion = persona.PeperDireccion,
+                    Celular = persona.PeperCelular,
+                    TelefonoDomicilio = persona.PeperTeldom,
+                    CargasFamiliares = (int)persona.PeperCargas,
+                    SexoCodigo = persona.PsexCodigo,
+                    EstadoCivilCodigo = persona.PeescCodigo,
+                    // Campos extra para lógica interna
+                    Password = usuario.XeestCodigo // Usamos este campo temporalmente para pasar el ESTADO ('A'/'I')
+                };
+            }
+        }
+
+        // 2. GUARDAR CAMBIOS
+        public bool EditarUsuario(PeperPer persona, XeusuUsuar usuario, out string mensaje)
+        {
+            mensaje = string.Empty;
+            using (var db = new MonsterContext())
+            {
+                using (var transaccion = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        // Buscar entidades originales
+                        var pOriginal = db.PeperPers.Find(persona.PeperCodigo);
+                        var uOriginal = db.XeusuUsuars.FirstOrDefault(u => u.PeperCodigo == persona.PeperCodigo);
+
+                        if (pOriginal == null || uOriginal == null)
+                        {
+                            mensaje = "El usuario no existe.";
+                            return false;
+                        }
+
+                        // Actualizar Persona
+                        pOriginal.PeperNombre = persona.PeperNombre;
+                        pOriginal.PeperApellido = persona.PeperApellido;
+                        pOriginal.PeperDireccion = persona.PeperDireccion;
+                        pOriginal.PeperCelular = persona.PeperCelular;
+                        pOriginal.PeperTeldom = persona.PeperTeldom;
+                        pOriginal.PeperFechanaci = persona.PeperFechanaci;
+                        pOriginal.PeperCargas = persona.PeperCargas;
+                        pOriginal.PsexCodigo = persona.PsexCodigo;
+                        pOriginal.PeescCodigo = persona.PeescCodigo;
+                        pOriginal.PeperEmail = persona.PeperEmail;
+
+                        // Actualizar Usuario (Login y Estado)
+                        uOriginal.XeusuLogin = usuario.XeusuLogin; // Permitimos cambiar correo/login
+                        uOriginal.XeestCodigo = usuario.XeestCodigo; // Permitimos cambiar estado (A/I)
+                        uOriginal.XeusuFecmod = DateTime.Now;
+
+                        db.SaveChanges();
+                        transaccion.Commit();
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        transaccion.Rollback();
+                        mensaje = "Error al editar: " + ex.Message;
+                        return false;
+                    }
+                }
+            }
+        }
+        public bool DarDeBajaUsuario(string cedula, out string mensaje)
+        {
+            mensaje = string.Empty;
+            using (var db = new MonsterContext())
+            {
+                try
+                {
+                    // Buscamos al usuario por la cédula de la persona asociada
+                    var usuario = db.XeusuUsuars.FirstOrDefault(u => u.PeperCodigo == cedula);
+
+                    if (usuario == null)
+                    {
+                        mensaje = "Usuario no encontrado.";
+                        return false;
+                    }
+
+                    usuario.XeestCodigo = "I"; // Inactivo
+                    usuario.XeusuFecmod = DateTime.Now;
+
+                    db.SaveChanges();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    mensaje = "Error al dar de baja: " + ex.Message;
                     return false;
                 }
             }
