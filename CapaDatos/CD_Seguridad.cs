@@ -8,71 +8,79 @@ namespace Monster_University_GR2.CapaDatos
 {
     public class CD_Seguridad
     {
-        // 1. Listar Roles (PEROL_ROLES)
-        // Concatenamos Departamento y Rol porque es llave compuesta
+        // 1. LISTAR ROLES (Combo Box)
         public List<RolDTO> ListarRoles()
         {
             using (var db = new MonsterContext())
             {
-                return db.PerolRoles
-                    .Select(r => new RolDTO
-                    {
-                        // Guardamos "SYS|ADM" para saber ambos datos luego
-                        CodigoCompuesto = r.PedepCodigo + "|" + r.PerolCodigo,
-                        Descripcion = r.PerolDescri
-                    }).ToList();
+                var lista = from rol in db.PerolRoles
+                            join dep in db.PedepDepars on rol.PedepCodigo equals dep.PedepCodigo
+                            where rol.PerolCodigo != "INV"
+                            select new RolDTO
+                            {
+                                CodigoCompuesto = rol.PedepCodigo + "|" + rol.PerolCodigo,
+                                Descripcion = dep.PedepDescri + " | " + rol.PerolDescri
+                            };
+                return lista.ToList();
             }
         }
 
-        // 2. Obtener Usuarios CON ese Rol (Tabla Derecha)
-        // Buscamos en PEEMP_EMPLE
+        // 2. OBTENER ASIGNADOS (Tabla Derecha)
         public List<PerfilUsuarioDTO> ObtenerAsignados(string depCodigo, string rolCodigo)
         {
             using (var db = new MonsterContext())
             {
-                var query = from empleado in db.PeempEmples
-                            join persona in db.PeperPers on empleado.PeperCodigo equals persona.PeperCodigo
-                            // Unimos con Usuario para sacar el Login
-                            join usuario in db.XeusuUsuars on persona.PeperCodigo equals usuario.PeperCodigo
-                            where empleado.PedepCodigo == depCodigo
-                               && empleado.PerolCodigo == rolCodigo
+                var query = from emp in db.PeempEmples
+                            join per in db.PeperPers on emp.PeperCodigo equals per.PeperCodigo
+                            join usu in db.XeusuUsuars on per.PeperCodigo equals usu.PeperCodigo
+                            where emp.PedepCodigo == depCodigo && emp.PerolCodigo == rolCodigo
                             select new PerfilUsuarioDTO
                             {
-                                Login = usuario.XeusuLogin,
-                                NombreCompleto = persona.PeperNombre + " " + persona.PeperApellido
+                                Login = usu.XeusuLogin,
+                                NombreCompleto = per.PeperNombre + " " + per.PeperApellido
                             };
 
                 return query.ToList();
             }
         }
 
-        // 3. Obtener Usuarios SIN ese Rol (Tabla Izquierda)
+        // 3. OBTENER DISPONIBLES (Tabla Izquierda)
         public List<PerfilUsuarioDTO> ObtenerNoAsignados(string depCodigo, string rolCodigo)
         {
             using (var db = new MonsterContext())
             {
-                // Subconsulta: Cédulas que YA tienen este rol asignado
-                var cedulasAsignadas = db.PeempEmples
-                                         .Where(e => e.PedepCodigo == depCodigo && e.PerolCodigo == rolCodigo)
-                                         .Select(e => e.PeperCodigo);
+                // Paso A: Obtener las Cédulas de quienes YA tienen el cargo seleccionado
+                var cedulasOcupadas = db.PeempEmples
+                                        .Where(e => e.PedepCodigo == depCodigo && e.PerolCodigo == rolCodigo)
+                                        .Select(e => e.PeperCodigo)
+                                        .ToList(); // Traemos a memoria para comparar strings limpiamente
 
-                // Consulta: Usuarios Activos ('A') que NO están en la lista de arriba
-                var query = from usuario in db.XeusuUsuars
-                            join persona in db.PeperPers on usuario.PeperCodigo equals persona.PeperCodigo
-                            where !cedulasAsignadas.Contains(persona.PeperCodigo)
-                               && usuario.XeestCodigo == "A" // <-- Estado Correcto
+                // Paso B: Consultar el Universo de Usuarios Activos
+                // Usamos sintaxis de método para facilitar el Left Join y el filtrado
+                var query = from usu in db.XeusuUsuars
+                            join per in db.PeperPers on usu.PeperCodigo equals per.PeperCodigo
+                            // LEFT JOIN con Empleados para ver su rol actual (si tienen)
+                            join emp in db.PeempEmples on per.PeperCodigo equals emp.PeperCodigo into empGroup
+                            from empActual in empGroup.DefaultIfEmpty()
+
+                            where !cedulasOcupadas.Contains(usu.PeperCodigo) // Excluir a los que ya tienen el rol
+                               && usu.XeestCodigo == "A" // Solo usuarios activos
+
                             select new PerfilUsuarioDTO
                             {
-                                Login = usuario.XeusuLogin,
-                                NombreCompleto = persona.PeperNombre + " " + persona.PeperApellido
+                                Login = usu.XeusuLogin,
+                                // Formateamos el nombre para mostrar información útil
+                                NombreCompleto = per.PeperNombre + " " + per.PeperApellido +
+                                                 (empActual != null ? " [" + empActual.PerolCodigo + "]" : " [SIN ROL]")
                             };
 
-                return query.ToList();
+                // El Distinct es vital aquí porque el Join puede multiplicar filas si hay inconsistencias
+                return query.Distinct().ToList();
             }
         }
 
-        // 4. ASIGNAR ROL (Insertar en PEEMP_EMPLE)
-        public bool AsignarRol(string login, string depCodigo, string rolCodigo)
+        // 4. ASIGNAR (Mover derecha)
+        public bool AsignarRol(string login, string depDestino, string rolDestino)
         {
             using (var db = new MonsterContext())
             {
@@ -80,33 +88,39 @@ namespace Monster_University_GR2.CapaDatos
                 {
                     try
                     {
-                        // 1. Obtener el código de persona (Cédula) basado en el Login
                         var usuario = db.XeusuUsuars.FirstOrDefault(u => u.XeusuLogin == login);
                         if (usuario == null) return false;
 
-                        // 2. Crear registro de Empleado
-                        // NOTA: PEEMP_CODIGO es PK. Usaremos la misma Cédula + Rol para hacerlo único o la Cédula sola si es 1 a 1.
-                        // Para simplificar y evitar errores de longitud, usaremos la Cédula como código de empleado temporalmente.
-                        // Si un usuario puede tener varios roles, necesitaríamos lógica para generar un código único (ej: EMP001, EMP002).
+                        // --- ACTUALIZACIÓN RRHH (PEEMP_EMPLE) ---
+                        var empleadoExistente = db.PeempEmples.FirstOrDefault(e => e.PeperCodigo == usuario.PeperCodigo);
 
-                        // Validar si ya existe
-                        bool existe = db.PeempEmples.Any(e => e.PeperCodigo == usuario.PeperCodigo && e.PerolCodigo == rolCodigo);
-                        if (existe) return false;
-
-                        var nuevoEmpleado = new PeempEmple
+                        if (empleadoExistente != null)
                         {
-                            PeempCodigo = usuario.PeperCodigo, // Usamos la Cédula como ID de empleado
-                            PeperCodigo = usuario.PeperCodigo,
-                            PedepCodigo = depCodigo,
-                            PerolCodigo = rolCodigo
-                        };
+                            // UPDATE: Cambiamos de cargo
+                            empleadoExistente.PedepCodigo = depDestino;
+                            empleadoExistente.PerolCodigo = rolDestino;
+                        }
+                        else
+                        {
+                            // INSERT: Nuevo contrato
+                            var nuevoEmpleado = new PeempEmple
+                            {
+                                PeempCodigo = usuario.PeperCodigo,
+                                PeperCodigo = usuario.PeperCodigo,
+                                PedepCodigo = depDestino,
+                                PerolCodigo = rolDestino
+                            };
+                            db.PeempEmples.Add(nuevoEmpleado);
+                        }
 
-                        db.PeempEmples.Add(nuevoEmpleado);
+                        // --- ACTUALIZACIÓN SEGURIDAD (XEUXP_USUPE) ---
+                        SincronizarPerfilSistema(db, login, rolDestino);
+
                         db.SaveChanges();
                         transaccion.Commit();
                         return true;
                     }
-                    catch
+                    catch (Exception)
                     {
                         transaccion.Rollback();
                         return false;
@@ -115,32 +129,39 @@ namespace Monster_University_GR2.CapaDatos
             }
         }
 
-        // 5. DESASIGNAR ROL (Borrar de PEEMP_EMPLE)
-        public bool DesasignarRol(string login, string depCodigo, string rolCodigo)
+        // 5. DESASIGNAR (Mover izquierda)
+        public bool DesasignarRol(string login)
         {
-            using (var db = new MonsterContext())
+            return AsignarRol(login, "GEN", "INV");
+        }
+
+        // MÉTODO PRIVADO CORREGIDO: Propiedades reales de tu BD
+        private void SincronizarPerfilSistema(MonsterContext db, string login, string rolRRHH)
+        {
+            // 1. Buscar perfil activo anterior
+            // CORRECCIÓN: Usamos XeuxpFeccad (Fecha Caducidad) en lugar de Fecret
+            var perfilAnterior = db.XeuxpUsupes
+                                   .FirstOrDefault(x => x.XeusuLogin == login && x.XeuxpFecret == null);
+
+            if (perfilAnterior != null)
             {
-                try
-                {
-                    // Buscamos al usuario
-                    var usuario = db.XeusuUsuars.FirstOrDefault(u => u.XeusuLogin == login);
-                    if (usuario == null) return false;
-
-                    // Buscamos el registro en Empleados
-                    var empleado = db.PeempEmples
-                        .FirstOrDefault(e => e.PeperCodigo == usuario.PeperCodigo
-                                          && e.PedepCodigo == depCodigo
-                                          && e.PerolCodigo == rolCodigo);
-
-                    if (empleado != null)
-                    {
-                        db.PeempEmples.Remove(empleado);
-                        db.SaveChanges();
-                    }
-                    return true;
-                }
-                catch { return false; }
+                db.XeuxpUsupes.Remove(perfilAnterior);
             }
+
+            // 2. Determinar nuevo perfil
+            string nuevoPerfil = rolRRHH;
+            if (!db.XeperPerfis.Any(p => p.XeperCodigo == nuevoPerfil))
+            {
+                nuevoPerfil = "INV"; // Fallback si no existe mapeo
+            }
+
+            // 3. Insertar nuevo
+            db.XeuxpUsupes.Add(new XeuxpUsupe
+            {
+                XeusuLogin = login,
+                XeperCodigo = nuevoPerfil,
+                XeuxpFecasi = DateTime.Now,
+            });
         }
     }
 }

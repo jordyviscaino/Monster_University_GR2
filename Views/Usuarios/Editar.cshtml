@@ -1,50 +1,112 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@model Monster_University_GR2.CapaEntidad.UsuarioEditarViewModel
+﻿@model Monster_University_GR2.CapaEntidad.UsuarioEditarViewModel
 @{
-    ViewBag.Title = "Editar Usuario";
+    ViewBag.Title = "Editar Usuario Completo";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="card shadow-sm border-0">
-    <div class="card-header bg-primary text-white">
-        <h5 class="mb-0"><i class="fas fa-user-edit"></i> Editar Usuario</h5>
+    <div class="card-header bg-primary text-white d-flex justify-content-between">
+        <h5 class="mb-0"><i class="fas fa-user-edit"></i> Editar Ficha de Usuario</h5>
+        <span class="badge bg-light text-primary align-self-center">@Model.Cedula</span>
     </div>
     <div class="card-body">
-        <form asp-action="Editar" method="post" class="row g-3">
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">@ViewBag.Error</div>
+        }
+
+        <form asp-action="Editar" enctype="multipart/form-data" method="post" class="row g-3">
 
             <input type="hidden" asp-for="Cedula" />
 
-            <div class="col-md-4">
-                <label class="form-label">Cédula</label>
-                <input value="@Model.Cedula" class="form-control" disabled readonly />
-                <div class="form-text">No se puede editar.</div>
+            <div class="col-12"><h6 class="text-primary border-bottom pb-1">Identificación (No modificable)</h6></div>
+
+            <div class="col-md-6">
+                <label class="form-label text-muted">Cédula de Identidad</label>
+                <input value="@Model.Cedula" class="form-control bg-light" readonly />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label text-muted">Cuenta de Usuario (Login)</label>
+                <input asp-for="Email" class="form-control bg-light" readonly />
             </div>
 
-            <div class="col-md-4">
+            <div class="col-12 mt-3"><h6 class="text-primary border-bottom pb-1">Datos Personales</h6></div>
+
+            <div class="row mb-4 align-items-center">
+                <div class="col-md-3 text-center">
+                    <img src="~/images/usuarios/@(Model.Cedula).jpeg?v=@DateTime.Now.Ticks"
+                         onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'"
+                         class="img-thumbnail rounded-circle shadow-sm"
+                         style="width: 120px; height: 120px; object-fit: cover;" />
+                </div>
+                <div class="col-md-9">
+                    <label class="form-label">Cambiar Foto</label>
+                    <input asp-for="FotoPerfil" type="file" class="form-control" accept="image/*" />
+                </div>
+            </div>
+
+
+            <div class="col-md-6">
                 <label class="form-label">Nombres</label>
                 <input asp-for="Nombre" class="form-control" />
                 <span asp-validation-for="Nombre" class="text-danger small"></span>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label class="form-label">Apellidos</label>
                 <input asp-for="Apellido" class="form-control" />
                 <span asp-validation-for="Apellido" class="text-danger small"></span>
             </div>
 
             <div class="col-md-3">
-                <label class="form-label fw-bold text-primary">Estado Sistema</label>
-                <select asp-for="EstadoUsuario" class="form-select">
-                    <option value="A">ACTIVO</option>
-                    <option value="I">INACTIVO</option>
+                <label class="form-label">Fecha Nacimiento</label>
+                <input asp-for="FechaNacimiento" type="date" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Género</label>
+                <select asp-for="SexoCodigo" class="form-select" asp-items="ViewBag.ListaSexos"></select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Estado Civil</label>
+                <select asp-for="EstadoCivilCodigo" class="form-select" asp-items="ViewBag.ListaEstadoCivil"></select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Cargas Fam.</label>
+                <input asp-for="CargasFamiliares" type="number" class="form-control" />
+            </div>
+
+            <div class="col-12 mt-3"><h6 class="text-primary border-bottom pb-1">Ubicación y Contacto</h6></div>
+
+            <div class="col-md-6">
+                <label class="form-label">Dirección Domiciliaria</label>
+                <input asp-for="Direccion" class="form-control" />
+                <span asp-validation-for="Direccion" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Celular</label>
+                <input asp-for="Celular" class="form-control" />
+                <span asp-validation-for="Celular" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Teléfono Fijo</label>
+                <input asp-for="TelefonoDomicilio" class="form-control" />
+            </div>
+
+            <div class="col-12 mt-3"><h6 class="text-danger border-bottom pb-1">Control de Acceso</h6></div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Estado en el Sistema</label>
+                <select asp-for="EstadoUsuario" class="form-select border-danger">
+                    <option value="A">ACTIVO (Permitir acceso)</option>
+                    <option value="I">INACTIVO (Bloquear acceso)</option>
                 </select>
             </div>
 
             <div class="col-12 mt-4 text-end">
                 <a href="@Url.Action("Index")" class="btn btn-secondary">Cancelar</a>
-                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar Cambios</button>
+                <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save"></i> Guardar Cambios</button>
             </div>
+
         </form>
     </div>
 </div>

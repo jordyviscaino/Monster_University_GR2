@@ -26,13 +26,14 @@ namespace Monster_University_GR2.CapaNegocio
         public bool Asignar(string login, string codigoCompuesto)
         {
             var partes = codigoCompuesto.Split('|');
+            // Partes[0] = Departamento (ej: ACA), Partes[1] = Rol (ej: DOC)
             return objDatos.AsignarRol(login, partes[0], partes[1]);
         }
 
         public bool Desasignar(string login, string codigoCompuesto)
         {
-            var partes = codigoCompuesto.Split('|');
-            return objDatos.DesasignarRol(login, partes[0], partes[1]);
+            // Al desasignar, ignoramos el código compuesto y lo mandamos a INV
+            return objDatos.DesasignarRol(login);
         }
     }
 }

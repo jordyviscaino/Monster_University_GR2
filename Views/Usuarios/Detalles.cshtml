@@ -1,67 +1,88 @@
 ﻿@*
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
+
 @model Monster_University_GR2.CapaEntidad.UsuarioEditarViewModel
+
 @{
-    ViewBag.Title = "Detalles de Usuario";
+    ViewBag.Title = "Detalles del Usuario";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="card shadow-sm border-0">
-    <div class="card-header bg-info text-white d-flex justify-content-between">
-        <h5 class="mb-0"><i class="fas fa-id-card"></i> Ficha de Usuario</h5>
-        <a href="@Url.Action("Index")" class="btn btn-light btn-sm text-dark"><i class="fas fa-arrow-left"></i> Volver</a>
-    </div>
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-md-2 text-center">
-                <i class="fas fa-user-circle fa-6x text-secondary"></i>
-                <br />
-                <span class="badge bg-secondary mt-2">@Model.Cedula</span>
-            </div>
-            <div class="col-md-10">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="fw-bold">Nombres Completos</label>
-                        <p class="form-control-plaintext border-bottom">@Model.Nombre @Model.Apellido</p>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="fw-bold">Correo (Login)</label>
-                        <p class="form-control-plaintext border-bottom">@Model.Email</p>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="fw-bold">Fecha Nacimiento</label>
-                        <p class="form-control-plaintext border-bottom">@Model.FechaNacimiento.ToShortDateString()</p>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="fw-bold">Celular</label>
-                        <p class="form-control-plaintext border-bottom">@Model.Celular</p>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="fw-bold">Estado</label>
-                        <p>
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 overflow-hidden">
+
+        <div class="card-header bg-primary text-white text-center py-4" style="background: linear-gradient(135deg, #004aad 0%, #0078d7 100%);">
+            <h3 class="mb-0 fw-bold text-uppercase">Ficha de Usuario</h3>
+            <p class="mb-0 opacity-75">Monster University - Sistema Académico</p>
+        </div>
+
+        <div class="card-body p-5">
+            <div class="row align-items-center">
+
+                <div class="col-md-4 text-center border-end">
+                    <div class="position-relative d-inline-block">
+                        <img src="~/images/usuarios/@(Model.Cedula).jpeg?v=@DateTime.Now.Ticks"
+                             onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'"
+                             class="img-thumbnail rounded-circle shadow mb-3"
+                             style="width: 220px; height: 220px; object-fit: cover; border: 5px solid #fff;"
+                             alt="Foto Perfil" />
+
+                        <div class="position-absolute bottom-0 end-0 mb-3 me-3">
                             @if (Model.EstadoUsuario == "A")
                             {
-                                <span class="badge bg-success">ACTIVO</span>
+                                <span class="badge rounded-pill bg-success border border-white p-2">ACTIVO <i class="fas fa-check-circle"></i></span>
                             }
                             else
                             {
-
-                                <span class="badge bg-danger">INACTIVO</span>
+                                <span class="badge rounded-pill bg-danger border border-white p-2">INACTIVO <i class="fas fa-ban"></i></span>
                             }
-                        </p>
+                        </div>
                     </div>
-                    <div class="col-12">
-                        <label class="fw-bold">Dirección</label>
-                        <p class="form-control-plaintext border-bottom">@Model.Direccion</p>
+
+                    <h4 class="fw-bold mt-2">@Model.Nombre @Model.Apellido</h4>
+                    <p class="text-muted text-uppercase small">@Model.Email</p>
+                </div>
+
+                <div class="col-md-8 ps-md-5">
+                    <h5 class="text-primary border-bottom pb-2 mb-4"><i class="fas fa-id-card me-2"></i>Información Personal</h5>
+
+                    <div class="row g-4">
+                        <div class="col-sm-6">
+                            <label class="text-muted small fw-bold text-uppercase">Cédula</label>
+                            <p class="fs-5 fw-bold text-dark">@Model.Cedula</p>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="text-muted small fw-bold text-uppercase">Fecha de Nacimiento</label>
+                            <p class="fs-5">@Model.FechaNacimiento.ToString("dd 'de' MMMM 'de' yyyy")</p>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <label class="text-muted small fw-bold text-uppercase">Dirección</label>
+                            <p class="fs-5"><i class="fas fa-map-marker-alt text-danger me-1"></i> @Model.Direccion</p>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="text-muted small fw-bold text-uppercase">Teléfono / Celular</label>
+                            <p class="fs-5"><i class="fas fa-phone text-success me-1"></i> @Model.Celular</p>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <label class="text-muted small fw-bold text-uppercase">Cargas Familiares</label>
+                            <p class="fs-5">@Model.CargasFamiliares</p>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-5">
+                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary px-4">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                        <a href="@Url.Action("Editar", new { id = Model.Cedula })" class="btn btn-primary px-4">
+                            <i class="fas fa-pen"></i> Editar Ficha
+                        </a>
                     </div>
                 </div>
+
             </div>
-        </div>
-        <div class="text-end mt-3">
-            <a href="@Url.Action("Editar", new { id = Model.Cedula })" class="btn btn-primary">
-                <i class="fas fa-pen"></i> Editar Información
-            </a>
         </div>
     </div>
 </div>

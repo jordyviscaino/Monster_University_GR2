@@ -1,117 +1,231 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@model Monster_University_GR2.CapaEntidad.UsuarioCrearViewModel
+﻿@model Monster_University_GR2.CapaEntidad.UsuarioCrearCompletoViewModel
 
 @{
-    ViewBag.Title = "Nuevo Usuario";
-    Layout = "~/Views/Shared/_Layout.cshtml"; // Usamos el Layout Maestro
+    ViewBag.Title = "Ficha de Registro";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="card shadow-sm border-0">
-    <div class="card-header bg-dark text-white">
-        <h5 class="mb-0"><i class="fas fa-user-plus"></i> Registrar Nuevo Usuario</h5>
-    </div>
-    <div class="card-body">
+<style>
+    /* ===== CONTENEDOR GENERAL TIPO TABPAGE ===== */
+    .tab-wrapper {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
 
-        @if (TempData["Exito"] != null)
-        {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle"></i> @TempData["Exito"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+    /* ===== NAV TABS ===== */
+    .nav-tabs {
+        border-bottom: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        padding-left: 10px;
+    }
+
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px 6px 0 0;
+            margin-right: 4px;
+            padding: 12px 20px;
+            transition: all 0.2s ease-in-out;
         }
 
-        @if (ViewBag.Error != null)
-        {
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle"></i> @ViewBag.Error
-            </div>
-        }
+            .nav-tabs .nav-link:hover {
+                color: #004aad;
+                background-color: #e9ecef;
+            }
 
-        <form asp-action="Crear" method="post" class="row g-3">
+            .nav-tabs .nav-link.active {
+                color: #004aad;
+                background-color: #fff;
+                border: 1px solid #dee2e6;
+                border-bottom: 1px solid #fff; /* conecta con el contenido */
+            }
 
-            <div class="col-12"><h6 class="text-primary border-bottom pb-2">Datos de Identificación</h6></div>
+    /* ===== CONTENIDO DE TAB ===== */
+    .tab-content {
+        padding: 25px;
+        background-color: #fff;
+    }
 
-            <div class="col-md-4">
-                <label class="form-label">Cédula</label>
-                <input asp-for="Cedula" class="form-control" placeholder="10 dígitos" />
-                <span asp-validation-for="Cedula" class="text-danger small"></span>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Nombres</label>
-                <input asp-for="Nombre" class="form-control" />
-                <span asp-validation-for="Nombre" class="text-danger small"></span>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Apellidos</label>
-                <input asp-for="Apellido" class="form-control" />
-                <span asp-validation-for="Apellido" class="text-danger small"></span>
-            </div>
+    /* ===== HEADER CARD ===== */
+    .header-card {
+        background-color: #f8f9fa;
+        border-left: 5px solid #004aad;
+    }
+</style>
 
-            <div class="col-12 mt-4"><h6 class="text-primary border-bottom pb-2">Información Personal</h6></div>
+<div class="container mt-4 mb-5">
 
-            <div class="col-md-3">
-                <label class="form-label">Fecha Nacimiento</label>
-                <input asp-for="FechaNacimiento" class="form-control" type="date" />
-                <span asp-validation-for="FechaNacimiento" class="text-danger small"></span>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Género</label>
-                <select asp-for="SexoCodigo" class="form-select" asp-items="ViewBag.ListaSexos">
-                    <option value="">Seleccione...</option>
-                </select>
-                <span asp-validation-for="SexoCodigo" class="text-danger small"></span>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Estado Civil</label>
-                <select asp-for="EstadoCivilCodigo" class="form-select" asp-items="ViewBag.ListaEstadoCivil">
-                    <option value="">Seleccione...</option>
-                </select>
-                <span asp-validation-for="EstadoCivilCodigo" class="text-danger small"></span>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Cargas Familiares</label>
-                <input asp-for="CargasFamiliares" class="form-control" type="number" min="0" />
-                <span asp-validation-for="CargasFamiliares" class="text-danger small"></span>
-            </div>
+    <form asp-action="Crear" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
 
-            <div class="col-12 mt-4"><h6 class="text-primary border-bottom pb-2">Contacto</h6></div>
+        <!-- ================= HEADER ================= -->
+        <div class="card shadow-sm border-0 mb-4 header-card">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
 
-            <div class="col-md-6">
-                <label class="form-label">Dirección Domiciliaria</label>
-                <input asp-for="Direccion" class="form-control" placeholder="Calle principal, secundaria y número" />
-                <span asp-validation-for="Direccion" class="text-danger small"></span>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Celular</label>
-                <input asp-for="Celular" class="form-control" placeholder="09..." />
-                <span asp-validation-for="Celular" class="text-danger small"></span>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Teléfono Fijo</label>
-                <input asp-for="TelefonoDomicilio" class="form-control" placeholder="02..." />
-                <span asp-validation-for="TelefonoDomicilio" class="text-danger small"></span>
-            </div>
+                    <div class="col-md-2 text-center">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                             id="previewFoto"
+                             class="img-thumbnail rounded-circle shadow-sm mb-2"
+                             style="width:100px;height:100px;object-fit:cover;" />
 
-            <div class="col-12 mt-4"><h6 class="text-primary border-bottom pb-2">Credenciales de Acceso</h6></div>
+                        <label class="btn btn-sm btn-outline-primary w-100">
+                            <i class="fas fa-camera"></i> Subir Foto
+                            <input asp-for="FotoPerfil" type="file" hidden accept="image/*" onchange="previewImage(this)" />
+                        </label>
+                    </div>
 
-            <div class="col-md-6">
-                <label class="form-label">Correo Electrónico (Usuario)</label>
-                <input asp-for="Email" class="form-control" placeholder="correo@ejemplo.com" />
-                <span asp-validation-for="Email" class="text-danger small"></span>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Contraseña Temporal</label>
-                <input asp-for="Password" class="form-control" type="password" value="Monster2025" />
-                <div class="form-text">El usuario deberá cambiar esta contraseña al ingresar.</div>
-                <span asp-validation-for="Password" class="text-danger small"></span>
-            </div>
+                    <div class="col-md-10">
+                        <div class="row g-3">
+                            <div class="col-12 border-bottom pb-2">
+                                <label class="fw-bold me-3">Tipo de Usuario:</label>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" asp-for="TipoVinculacion" value="EST" id="radioEst" checked onchange="toggleAccessPanel()">
+                                    <label class="form-check-label" for="radioEst">Estudiante</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" asp-for="TipoVinculacion" value="EMP" id="radioEmp" onchange="toggleAccessPanel()">
+                                    <label class="form-check-label" for="radioEmp">Empleado</label>
+                                </div>
+                            </div>
 
-            <div class="col-12 mt-4 text-end">
-                <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Guardar Usuario</button>
-            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Cédula *</label>
+                                <input asp-for="Cedula" class="form-control" required />
+                                <span asp-validation-for="Cedula" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Nombres *</label>
+                                <input asp-for="Nombre" class="form-control" required />
+                                <span asp-validation-for="Nombre" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Apellidos *</label>
+                                <input asp-for="Apellido" class="form-control" required />
+                                <span asp-validation-for="Apellido" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
 
-        </form>
-    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TABPAGE ================= -->
+        <div class="tab-wrapper mb-4">
+
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#datos">
+                        <i class="fas fa-address-card me-1"></i> Información Civil
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#contacto">
+                        <i class="fas fa-map-marker-alt me-1"></i> Contacto
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#seguridad">
+                        <i class="fas fa-user-lock me-1"></i> Seguridad
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <!-- TAB 1 -->
+                <div class="tab-pane fade show active" id="datos">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Fecha Nacimiento *</label>
+                            <input asp-for="FechaNacimiento" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Género</label>
+                            <select asp-for="SexoCodigo" class="form-select" asp-items="ViewBag.ListaSexos">
+                                <option value="">-- Seleccione --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2 -->
+                <div class="tab-pane fade" id="contacto">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Dirección *</label>
+                            <input asp-for="Direccion" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Celular *</label>
+                            <input asp-for="Celular" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Teléfono</label>
+                            <input asp-for="TelefonoDomicilio" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3 -->
+                <div class="tab-pane fade" id="seguridad">
+                    <div id="panelEstudiante" class="alert alert-info">
+                        <strong>Perfil Académico:</strong> Acceso a módulos de estudiante.
+                    </div>
+                    <div id="panelEmpleado" class="alert alert-warning" style="display:none;">
+                        <strong>Perfil Administrativo:</strong> Acceso restringido.
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Email *</label>
+                            <input asp-for="Email" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Contraseña *</label>
+                            <input asp-for="Password" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="text-end">
+            <a href="@Url.Action("Index")" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success fw-bold">
+                <i class="fas fa-save me-1"></i> Guardar
+            </button>
+        </div>
+
+    </form>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => document.getElementById('previewFoto').src = e.target.result;
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function toggleAccessPanel() {
+            document.getElementById("panelEstudiante").style.display =
+                document.getElementById("radioEst").checked ? "block" : "none";
+            document.getElementById("panelEmpleado").style.display =
+                document.getElementById("radioEmp").checked ? "block" : "none";
+        }
+
+        toggleAccessPanel();
+    </script>
+}

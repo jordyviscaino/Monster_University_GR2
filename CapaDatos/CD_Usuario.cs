@@ -11,16 +11,10 @@ namespace Monster_University_GR2.CapaDatos
         // Método para validar acceso llamando al SP
         public UsuarioSesion ValidarAcceso(string login)
         {
-            // Instanciamos el contexto usando el método que creamos o inyección (por ahora instanciamos para simplificar como en tu ejemplo anterior)
-            // NOTA: Lo ideal en .NET 8 es inyección, pero para mantener la estructura de tu lógica anterior:
-
+      
             // Usaremos una instancia nueva del contexto generado
             using (var db = new MonsterContext())
             {
-                // EJECUTAR SP EN .NET 8
-                // Importante: Los nombres de columnas en el SP deben coincidir con la clase UsuarioSesion
-                // OJO: Si tu SP devuelve columnas con nombres raros (ej: XEUSU_LOGIN),
-                // asegúrate de usar alias en el SP o mapear bien. 
 
                 // Asumiendo que el SP devuelve las columnas tal cual las definimos:
                 var usuario = db.Database.SqlQueryRaw<UsuarioSesion>(
@@ -75,7 +69,6 @@ namespace Monster_University_GR2.CapaDatos
                 }
             }
         }
-        // ... imports ...
 
         public bool RestablecerClave(string correo, string claveHasheada, out string mensaje)
         {
@@ -176,10 +169,7 @@ public List<UsuarioResumenViewModel> ListarUsuarios()
             return lista;
         }
     }
-        // ... imports ...
-
-        // 1. OBTENER UN USUARIO ESPECÍFICO (Para Ver Detalle y para cargar el Editar)
-        public UsuarioCrearViewModel ObtenerUsuarioCompleto(string cedula)
+   public UsuarioCrearCompletoViewModel ObtenerUsuarioCompleto(string cedula)
         {
             using (var db = new MonsterContext())
             {
@@ -190,7 +180,7 @@ public List<UsuarioResumenViewModel> ListarUsuarios()
                 if (persona == null || usuario == null) return null;
 
                 // Mapeamos a un ViewModel lleno (Usamos el de Crear porque tiene todos los campos)
-                return new UsuarioCrearViewModel
+                return new UsuarioCrearCompletoViewModel
                 {
                     Cedula = persona.PeperCedula,
                     Nombre = persona.PeperNombre,
@@ -209,8 +199,7 @@ public List<UsuarioResumenViewModel> ListarUsuarios()
             }
         }
 
-        // 2. GUARDAR CAMBIOS
-        public bool EditarUsuario(PeperPer persona, XeusuUsuar usuario, out string mensaje)
+         public bool EditarUsuario(PeperPer persona, XeusuUsuar usuario, out string mensaje)
         {
             mensaje = string.Empty;
             using (var db = new MonsterContext())
@@ -219,31 +208,32 @@ public List<UsuarioResumenViewModel> ListarUsuarios()
                 {
                     try
                     {
-                        // Buscar entidades originales
-                        var pOriginal = db.PeperPers.Find(persona.PeperCodigo);
-                        var uOriginal = db.XeusuUsuars.FirstOrDefault(u => u.PeperCodigo == persona.PeperCodigo);
+                        var pOriginal = db.PeperPers.FirstOrDefault(p => p.PeperCodigo == persona.PeperCodigo);
+                        var uOriginal = db.XeusuUsuars.FirstOrDefault(u => u.XeusuLogin == usuario.XeusuLogin);
 
                         if (pOriginal == null || uOriginal == null)
                         {
-                            mensaje = "El usuario no existe.";
+                            mensaje = "El registro no existe.";
                             return false;
                         }
 
-                        // Actualizar Persona
+                        // --- ACTUALIZAR DATOS PERSONALES (Todos) ---
                         pOriginal.PeperNombre = persona.PeperNombre;
                         pOriginal.PeperApellido = persona.PeperApellido;
-                        pOriginal.PeperDireccion = persona.PeperDireccion;
-                        pOriginal.PeperCelular = persona.PeperCelular;
-                        pOriginal.PeperTeldom = persona.PeperTeldom;
-                        pOriginal.PeperFechanaci = persona.PeperFechanaci;
-                        pOriginal.PeperCargas = persona.PeperCargas;
-                        pOriginal.PsexCodigo = persona.PsexCodigo;
-                        pOriginal.PeescCodigo = persona.PeescCodigo;
+                        pOriginal.PeperDireccion = persona.PeperDireccion; // Dirección
+                        pOriginal.PeperCelular = persona.PeperCelular;     // Celular
+                        pOriginal.PeperTeldom = persona.PeperTeldom;       // Fijo
+                        pOriginal.PeperFechanaci = persona.PeperFechanaci; // Fecha Nac.
+                        pOriginal.PeperCargas = persona.PeperCargas;       // Cargas
+                        pOriginal.PsexCodigo = persona.PsexCodigo;         // Sexo
+                        pOriginal.PeescCodigo = persona.PeescCodigo;       // Estado Civil
+                                                                           // El Email personal también se puede actualizar
                         pOriginal.PeperEmail = persona.PeperEmail;
 
-                        // Actualizar Usuario (Login y Estado)
-                        uOriginal.XeusuLogin = usuario.XeusuLogin; // Permitimos cambiar correo/login
-                        uOriginal.XeestCodigo = usuario.XeestCodigo; // Permitimos cambiar estado (A/I)
+                        // --- ACTUALIZAR USUARIO ---
+                        // Nota: No permitimos cambiar el Login (Correo) fácilmente porque es PK en otras tablas
+                        // Pero sí el estado
+                        uOriginal.XeestCodigo = usuario.XeestCodigo;
                         uOriginal.XeusuFecmod = DateTime.Now;
 
                         db.SaveChanges();
@@ -259,32 +249,137 @@ public List<UsuarioResumenViewModel> ListarUsuarios()
                 }
             }
         }
-        public bool DarDeBajaUsuario(string cedula, out string mensaje)
+
+        // 2. ELIMINACIÓN EN CASCADA (Borrado Físico Total)
+        public bool EliminarUsuarioTotal(string cedula, out string mensaje)
         {
             mensaje = string.Empty;
             using (var db = new MonsterContext())
             {
-                try
+                using (var transaccion = db.Database.BeginTransaction())
                 {
-                    // Buscamos al usuario por la cédula de la persona asociada
-                    var usuario = db.XeusuUsuars.FirstOrDefault(u => u.PeperCodigo == cedula);
-
-                    if (usuario == null)
+                    try
                     {
-                        mensaje = "Usuario no encontrado.";
+                        // Buscamos las entidades relacionadas
+                        var persona = db.PeperPers.FirstOrDefault(p => p.PeperCodigo == cedula);
+                        // Buscamos el usuario por la FK de persona
+                        var usuario = db.XeusuUsuars.FirstOrDefault(u => u.PeperCodigo == cedula);
+
+                        if (persona == null)
+                        {
+                            mensaje = "Usuario no encontrado.";
+                            return false;
+                        }
+
+                        // --- ORDEN DE BORRADO (De hijos a padres) ---
+
+                        // A. Si tiene usuario, borrar sus PERFILES (XEUXP_USUPE)
+                        if (usuario != null)
+                        {
+                            var perfiles = db.XeuxpUsupes.Where(x => x.XeusuLogin == usuario.XeusuLogin).ToList();
+                            if (perfiles.Any()) db.XeuxpUsupes.RemoveRange(perfiles);
+                        }
+
+                        // B. Borrar registro de EMPLEADO (PEEMP_EMPLE) si existe
+                        var empleado = db.PeempEmples.FirstOrDefault(e => e.PeperCodigo == cedula);
+                        if (empleado != null) db.PeempEmples.Remove(empleado);
+
+                        // C. Borrar registro de ESTUDIANTE (AEEST_ESTU) si existe
+                        var estudiante = db.AeestEstus.FirstOrDefault(e => e.PeperCodigo == cedula);
+                        if (estudiante != null)
+                        {
+                            // OJO: Si el estudiante ya tiene Matrículas (AAMAT), esto fallará por FK.
+                            // Para testeo actual funciona, pero en prod deberíamos validar si tiene historial.
+                            db.AeestEstus.Remove(estudiante);
+                        }
+
+                        // D. Borrar el USUARIO (XEUSU_USUAR)
+                        if (usuario != null) db.XeusuUsuars.Remove(usuario);
+
+                        // E. Finalmente, borrar la PERSONA (PEPER_PERS)
+                        db.PeperPers.Remove(persona);
+
+                        db.SaveChanges();
+                        transaccion.Commit();
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        transaccion.Rollback();
+                        // Tip: Si falla por FK de Matrículas, el mensaje lo dirá
+                        mensaje = "No se puede eliminar: " + ex.Message + (ex.InnerException != null ? " | " + ex.InnerException.Message : "");
                         return false;
                     }
-
-                    usuario.XeestCodigo = "I"; // Inactivo
-                    usuario.XeusuFecmod = DateTime.Now;
-
-                    db.SaveChanges();
-                    return true;
                 }
-                catch (Exception ex)
+            }
+        }
+        // En CD_Usuario.cs
+
+        public bool RegistrarUsuarioComplejo(PeperPer p, XeusuUsuar u, PeempEmple emp, AeestEstu est, out string mensaje)
+        {
+            mensaje = string.Empty;
+            using (var db = new MonsterContext())
+            {
+                using (var transaccion = db.Database.BeginTransaction())
                 {
-                    mensaje = "Error al dar de baja: " + ex.Message;
-                    return false;
+                    try
+                    {
+                        // 1. Guardar Persona
+                        if (db.PeperPers.Any(x => x.PeperCedula == p.PeperCedula))
+                        {
+                            mensaje = "La cédula ya existe.";
+                            return false;
+                        }
+                        db.PeperPers.Add(p);
+                        db.SaveChanges();
+
+                        // 2. Guardar Usuario
+                        u.PeperCodigo = p.PeperCodigo;
+                        db.XeusuUsuars.Add(u);
+                        db.SaveChanges();
+
+                        // 3. Guardar Perfil de Sistema (XEUXP_USUPE) - ¡AQUÍ ESTABA EL ERROR!
+                        var perfilSistema = new XeuxpUsupe
+                        {
+                            XeusuLogin = u.XeusuLogin,
+
+                            // CORRECCIÓN: Usar el nombre de propiedad exacto que generó Entity Framework.
+                            // En SQL es XEUXP_FECASI. Verifica en tu clase XeuxpUsupe.cs si es XeuxpFecasi o XeuxpFecasig
+                            XeuxpFecasi = DateTime.Now,  // <--- ESTA FECHA FALTABA Y CAUSABA EL OVERFLOW
+
+                            XeuxpFecret = null
+                        };
+
+                        // Asignar código de perfil según el caso
+                        if (emp != null) perfilSistema.XeperCodigo = "INV";
+                        if (est != null) perfilSistema.XeperCodigo = "EST";
+
+                        db.XeuxpUsupes.Add(perfilSistema);
+                        db.SaveChanges();
+
+                        // 4. Guardar Específico
+                        if (emp != null)
+                        {
+                            emp.PeperCodigo = p.PeperCodigo;
+                            db.PeempEmples.Add(emp);
+                        }
+                        else if (est != null)
+                        {
+                            est.PeperCodigo = p.PeperCodigo;
+                            db.AeestEstus.Add(est);
+                        }
+
+                        db.SaveChanges();
+                        transaccion.Commit();
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        transaccion.Rollback();
+                        // Tip: Agrega ex.InnerException para ver detalles reales
+                        mensaje = "Error: " + ex.Message + (ex.InnerException != null ? " | " + ex.InnerException.Message : "");
+                        return false;
+                    }
                 }
             }
         }

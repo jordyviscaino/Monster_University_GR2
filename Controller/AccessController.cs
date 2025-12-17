@@ -29,7 +29,6 @@ namespace Monster_University_GR2.Controllers
 
             if (usuario != null)
             {
-                // === NUEVA LÓGICA DE SEGURIDAD ===
                 // Verificar si tiene la bandera de "Cambiar Contraseña" activa ('S')
                 if (usuario.DebeCambiarPassword == "S")
                 {
@@ -39,7 +38,6 @@ namespace Monster_University_GR2.Controllers
 
                     return RedirectToAction("CambiarClave", "Access");
                 }
-                // =================================
 
                 // Si no tiene bandera, flujo normal (Dashboard)
                 string usuarioJson = JsonSerializer.Serialize(usuario);
@@ -101,51 +99,46 @@ namespace Monster_University_GR2.Controllers
         }
         // GET: Access/Recuperar
         // GET: Access/Recuperar
-        public IActionResult Recuperar()
-        {
-            return View();
-        }
-
-        // POST: Access/Recuperar
-        [HttpPost]
-        public IActionResult Recuperar(string correo)
-        {
-            CN_Usuario logica = new CN_Usuario();
-            string mensaje = "";
-
-            bool respuesta = logica.RecuperarContrasena(correo, out mensaje);
-
-            if (respuesta)
+            public IActionResult Recuperar()
             {
-                ViewBag.Exito = "Correo enviado exitosamente. Revisa tu bandeja de entrada.";
-            }
-            else
-            {
-                ViewBag.Error = mensaje;
+                return View();
             }
 
-            return View();
+            // POST: Access/Recuperar
+            [HttpPost]
+            public IActionResult Recuperar(string correo)
+            {
+                CN_Usuario logica = new CN_Usuario();
+                string mensaje = "";
+
+                bool respuesta = logica.RecuperarContrasena(correo, out mensaje);
+
+                if (respuesta)
+                {
+                    ViewBag.Exito = "Correo enviado exitosamente. Revisa tu bandeja de entrada.";
+                }
+                else
+                {
+                    ViewBag.Error = mensaje;
+                }
+
+                return View();
         }
         // GET: Access/CambiarClave
         public IActionResult CambiarClave()
         {
-            // Recuperamos el correo que guardamos en el Login
             if (TempData["CorreoCambio"] == null)
             {
-                // Si intenta entrar directo por URL sin pasar por login, lo botamos
                 return RedirectToAction("Login");
             }
 
             string correo = TempData["CorreoCambio"].ToString();
 
-            // Pasamos el modelo con el correo cargado
             CambiarClaveViewModel modelo = new CambiarClaveViewModel
             {
                 Email = correo
             };
 
-            // OJO: TempData se borra al leerse. Si la validación falla en el POST, 
-            // necesitamos mantener el correo, así que lo guardamos en el modelo (input hidden).
             return View(modelo);
         }
 

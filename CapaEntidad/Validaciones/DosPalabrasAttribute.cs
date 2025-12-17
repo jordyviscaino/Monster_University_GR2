@@ -14,12 +14,7 @@ namespace Monster_University_GR2.CapaEntidad.Validaciones
 
             string texto = value.ToString().Trim();
 
-            // EXPLICACIÓN REGEX:
-            // ^              -> Inicio de la cadena
-            // [a-zA-ZñÑáéíóúÁÉÍÓÚ]+ -> Una palabra (letras y tildes)
-            // \s             -> Un espacio en blanco (puedes poner \s+ si aceptas varios espacios)
-            // [a-zA-ZñÑáéíóúÁÉÍÓÚ]+ -> Otra palabra
-            // $              -> Fin de la cadena
+
             string patron = @"^[a-zA-ZñÑáéíóúÁÉÍÓÚ]+\s[a-zA-ZñÑáéíóúÁÉÍÓÚ]+$";
 
             if (!Regex.IsMatch(texto, patron))

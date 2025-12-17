@@ -1,0 +1,144 @@
+﻿@model List<Monster_University_GR2.CapaEntidad.EstudianteResumenDTO>
+@{
+    ViewBag.Title = "Reportes de Estudiantes";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0"><i class="fas fa-file-invoice"></i> Reportes Académicos</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Estudiante</th>
+                    <th>Carrera</th>
+                    <th class="text-center">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-bold">@item.CodigoEstudiante</td>
+                        <td>@item.NombreCompleto</td>
+                        <td><span class="badge bg-info text-dark">@item.Carrera</span></td>
+                        <td class="text-center">
+                            <button type="button"
+                                    onclick="abrirModalReporte('@item.CodigoEstudiante')"
+                                    class="btn btn-danger btn-sm text-white">
+                                <i class="fas fa-eye"></i> Vista Previa
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalBoletin" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Vista Previa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="contenedorBoletin">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+
+                <button type="button" class="btn btn-primary" onclick="imprimirConLibreria()">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // 1. CARGAR VISTA PREVIA (AJAX)
+        function abrirModalReporte(id) {
+            var modalEl = document.getElementById('modalBoletin');
+            var contenedor = document.getElementById('contenedorBoletin');
+            var modal = new bootstrap.Modal(modalEl);
+
+            modal.show();
+            contenedor.innerHTML = '<div class="text-center p-4"><div class="spinner-border text-primary"></div><p>Generando documento...</p></div>';
+
+            // Usamos concatenación simple para la URL
+            var url = '@Url.Action("BoletinPartial", "Estudiantes")' + '?id=' + id;
+
+            fetch(url)
+                .then(function(res){ return res.text(); })
+                .then(function(html){ contenedor.innerHTML = html; })
+                .catch(function(err){ console.error(err); contenedor.innerHTML = 'Error al cargar.'; });
+        }
+
+        // 2. IMPRIMIR USANDO PRINT.JS (Cero errores de sintaxis)
+        function imprimirConLibreria() {
+            // Verificamos que el reporte exista
+            if (!document.getElementById('areaImpresionReporte')) {
+                alert("El reporte no está listo.");
+                return;
+            }
+
+            // LLAMADA A LA API DE PRINT.JS
+            // printable: ID del elemento HTML a imprimir
+            // type: 'html' indica que vamos a imprimir un elemento del DOM
+            // scanStyles: true intenta copiar los colores y fuentes actuales
+            printJS({
+                printable: 'areaImpresionReporte',
+                type: 'html',
+                scanStyles: true,
+                targetStyles: ['*'], // Fuerza a copiar todos los estilos computados
+                documentTitle: 'Reporte_MonsterUniversity'
+            });
+        }
+
+
+        // 2. IMPRIMIR CON LOGO Y MÁRGENES
+function imprimirConLibreria() {
+    if (!document.getElementById('areaImpresionReporte')) {
+        alert("El reporte no está listo.");
+        return;
+    }
+
+    printJS({
+        printable: 'areaImpresionReporte',
+        type: 'html',
+        scanStyles: true,
+        targetStyles: ['*'], 
+        documentTitle: 'Boletin_MonsterU',
+        
+        // AQUÍ ESTÁ EL TRUCO DEL MARGEN Y LAS IMÁGENES
+        imageStyle: 'width:100%;', // Asegura que las imágenes se ajusten
+        style: `
+            @@page { 
+                size: A4; 
+                margin: 20mm;  /* MARGEN DE 2 CENTÍMETROS EN TODOS LOS LADOS */
+            }
+            body { 
+                -webkit-print-color-adjust: exact !important; /* Forza imprimir colores de fondo */
+                print-color-adjust: exact !important; 
+            }
+        `
+    });
+}
+    </script>
+    <script>
+        // INICIALIZAR DATATABLE
+        $(document).ready(function () {
+            $('#tablaReportes').DataTable({
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' }
+            });
+        });
+
+        // ... (Aquí abajo siguen tus funciones cargarBoletin y abrirModalReporte que ya hiciste) ...
+        function cargarBoletin...
+    </script>
+}

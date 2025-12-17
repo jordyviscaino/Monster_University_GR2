@@ -1,14 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Monster_University_GR2.CapaEntidad.Validaciones; // <--- No olvides esto
 
 namespace Monster_University_GR2.CapaEntidad
 {
     public class CambiarClaveViewModel
     {
         [Required]
-        public string Email { get; set; } // Lo pasaremos oculto para saber a quién actualizar
+        public string Email { get; set; }
 
         [Required(ErrorMessage = "La nueva contraseña es obligatoria")]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "Mínimo 6 caracteres")]
+        [PasswordFuerte]
         [DataType(DataType.Password)]
         public string NewPassword { get; set; }
 

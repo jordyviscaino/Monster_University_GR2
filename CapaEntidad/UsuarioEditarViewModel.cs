@@ -41,6 +41,8 @@ namespace Monster_University_GR2.CapaEntidad
 
         [Required]
         public string EstadoCivilCodigo { get; set; }
+        [Display(Name = "Actualizar Foto")]
+        public IFormFile FotoPerfil { get; set; }
 
         // Agregamos Estado para poder Inactivar/Activar desde la edición
         [Required]

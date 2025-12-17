@@ -4,8 +4,10 @@ using Monster_University_GR2.CapaEntidad.Validaciones;
 
 namespace Monster_University_GR2.CapaEntidad
 {
-    public class UsuarioCrearViewModel
+    public class UsuarioCrearCompletoViewModel
     {
+        [Required(ErrorMessage = "Debe seleccionar el tipo de vinculación")]
+        public string TipoVinculacion { get; set; } // Valores: "EST" (Estudiante) o "EMP" (Empleado)
         // --- DATOS DE IDENTIFICACIÓN ---
         [Required(ErrorMessage = "La cédula es obligatoria")]
         [CedulaEcuador(ErrorMessage = "Cédula inválida.")]
@@ -51,11 +53,13 @@ namespace Monster_University_GR2.CapaEntidad
 
         [Required(ErrorMessage = "Seleccione Estado Civil")]
         public string EstadoCivilCodigo { get; set; }
-
+        [Display(Name = "Foto de Perfil")]
+        public IFormFile FotoPerfil { get; set; }
         // --- SEGURIDAD ---
         // El admin asigna una contraseña inicial (o generamos una por defecto)
         [Required(ErrorMessage = "Asigne una contraseña temporal")]
-        [MinLength(6)]
+        [PasswordFuerte]
         public string Password { get; set; }
     }
 }
+

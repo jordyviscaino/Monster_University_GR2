@@ -1,72 +1,67 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-    ViewBag.Title = "Asignación de Perfiles";
+﻿@{
+    ViewBag.Title = "Gestión de Roles";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-dark text-white">
-        <h5 class="mb-0"><i class="fas fa-user-shield"></i> Asignación de Perfiles y Roles</h5>
+        <h5 class="mb-0"><i class="fas fa-users-cog"></i> Asignación de Roles de Personal</h5>
     </div>
     <div class="card-body">
 
         <div class="row mb-4">
-            <div class="col-md-6 offset-md-3">
-                <label class="form-label fw-bold">Seleccione el Perfil a gestionar:</label>
+            <div class="col-md-8 offset-md-2">
+                <label class="form-label fw-bold">Seleccione Departamento y Cargo:</label>
                 <select id="cboRol" class="form-select form-select-lg" asp-items="ViewBag.ListaRoles">
-                    <option value="">-- Seleccione un Rol --</option>
+                    <option value="">-- Seleccione un Cargo --</option>
                 </select>
             </div>
         </div>
 
         <hr />
 
-        <div class="row align-items-center">
+        <div class="row">
 
             <div class="col-md-5">
-                <h6 class="text-center text-muted">Usuarios Disponibles</h6>
-                <div class="card">
-                    <div class="card-body p-0" style="height: 300px; overflow-y: auto;">
-                        <table class="table table-hover table-sm mb-0" id="tablaDisponibles">
-                            <thead class="table-light sticky-top">
+                <h6 class="text-center text-muted fw-bold">Personal Disponible (Otros Cargos)</h6>
+                <div class="card bg-light">
+                    <div class="card-body p-0" style="height: 350px; overflow-y: auto;">
+                        <table class="table table-hover table-sm mb-0 align-middle">
+                            <thead class="table-secondary sticky-top">
                                 <tr>
-                                    <th>Usuario</th>
-                                    <th>Acción</th>
+                                    <th class="ps-3">Usuario</th>
+                                    <th class="text-center">Asignar</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="bodyDisponibles">
                             </tbody>
                         </table>
                     </div>
                 </div>
+                <div id="msgDisponibles" class="text-center small text-muted mt-1">Esperando selección...</div>
             </div>
 
-            <div class="col-md-2 text-center">
-                <div class="d-grid gap-2">
-                    <button class="btn btn-outline-secondary" disabled>
-                        <i class="fas fa-exchange-alt"></i>
-                    </button>
-                </div>
+            <div class="col-md-2 d-flex flex-column justify-content-center align-items-center">
+                <i class="fas fa-exchange-alt fa-2x text-muted opacity-25"></i>
             </div>
 
             <div class="col-md-5">
-                <h6 class="text-center text-success fw-bold">Usuarios Asignados</h6>
+                <h6 class="text-center text-success fw-bold">Personal Asignado (Actuales)</h6>
                 <div class="card border-success">
-                    <div class="card-body p-0" style="height: 300px; overflow-y: auto;">
-                        <table class="table table-hover table-sm mb-0" id="tablaAsignados">
+                    <div class="card-body p-0" style="height: 350px; overflow-y: auto;">
+                        <table class="table table-hover table-sm mb-0 align-middle">
                             <thead class="table-success sticky-top">
                                 <tr>
-                                    <th>Acción</th>
-                                    <th>Usuario</th>
+                                    <th class="text-center">Retirar</th>
+                                    <th class="ps-3">Usuario</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="bodyAsignados">
                             </tbody>
                         </table>
                     </div>
                 </div>
+                <div id="msgAsignados" class="text-center small text-muted mt-1">Esperando selección...</div>
             </div>
 
         </div>
@@ -75,75 +70,114 @@
 
 @section Scripts {
     <script>
-        const cboRol = document.getElementById("cboRol");        const tablaDisponibles = document.querySelector("#tablaDisponibles tbody");
-        const tablaAsignados = document.querySelector("#tablaAsignados tbody");
+        const cboRol = document.getElementById("cboRol");
+        const bodyDisponibles = document.getElementById("bodyDisponibles");
+        const bodyAsignados = document.getElementById("bodyAsignados");
 
-        // Al cambiar el combo, cargamos las tablas
-        cboPerfil.addEventListener("change", function() {
-            cargarTablas();
-        });
+        // EVENTO: Cambio en el Combo Box
+        cboRol.addEventListener("change", function() {
+            const idPerfil = cboRol.value;
+            console.log("Seleccionado:", idPerfil); // Debug 1
 
-        function cargarTablas() {
-            const idPerfil = cboPerfil.value;
             if(!idPerfil) {
-                tablaDisponibles.innerHTML = "";
-                tablaAsignados.innerHTML = "";
+                bodyDisponibles.innerHTML = "";
+                bodyAsignados.innerHTML = "";
                 return;
             }
 
-        fetch(`@Url.Action("ObtenerTablas")?idPerfil=${cboRol.value}`)                .then(response => response.json())
+            cargarDatos(idPerfil);
+        });
+
+        function cargarDatos(idPerfil) {
+            // URL correcta para llamar al Action del Controller
+            const url = `@Url.Action("ObtenerTablas", "Seguridad")?idPerfil=${encodeURIComponent(idPerfil)}`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error("Error en la red");
+                    return response.json();
+                })
                 .then(data => {
-                    pintarTabla(tablaDisponibles, data.disponibles, true);
-                    pintarTabla(tablaAsignados, data.asignados, false);
+                    console.log("Datos recibidos del servidor:", data); // Debug 2: ¡MIRA LA CONSOLA DEL NAVEGADOR!
+
+                    // Renderizamos usando las propiedades en MINÚSCULA (camelCase) por estándar JSON
+                    pintarTabla(bodyDisponibles, data.disponibles, true);
+                    pintarTabla(bodyAsignados, data.asignados, false);
+
+                    // Actualizar contadores
+                    document.getElementById("msgDisponibles").innerText = `${data.disponibles.length} registros encontrados.`;
+                    document.getElementById("msgAsignados").innerText = `${data.asignados.length} registros encontrados.`;
+                })
+                .catch(error => {
+                    console.error("Error cargando tablas:", error);
+                    alert("Error al cargar datos. Revise la consola.");
                 });
         }
 
-        function pintarTabla(tbody, datos, esDisponible) {
+        function pintarTabla(tbody, lista, esIzquierda) {
             tbody.innerHTML = "";
-            datos.forEach(item => {
+
+            if (lista.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted py-3">No hay usuarios</td></tr>`;
+                return;
+            }
+
+            lista.forEach(item => {
+                // OJO AQUÍ: Usamos item.nombreCompleto y item.login (Minúsculas)
+                // Si en tu consola ves que llegan con Mayúscula, cámbialo aquí.
+                const nombre = item.nombreCompleto || item.NombreCompleto || "---";
+                const login = item.login || item.Login || "---";
+
                 const fila = document.createElement("tr");
 
-                // Botón de acción (Flecha)
-                const btnAccion = document.createElement("button");
-                btnAccion.className = esDisponible ? "btn btn-sm btn-primary" : "btn btn-sm btn-danger";
-                btnAccion.innerHTML = esDisponible ? '<i class="fas fa-arrow-right"></i>' : '<i class="fas fa-arrow-left"></i>';
-                btnAccion.onclick = () => procesarMovimiento(item.login, esDisponible);
+                const celdaInfo = `<td class="ps-3">
+                                    <div class="fw-bold text-dark">${nombre}</div>
+                                    <div class="small text-muted">${login}</div>
+                                   </td>`;
 
-                const celdaBoton = document.createElement("td");
-                celdaBoton.appendChild(btnAccion);
-                celdaBoton.style.width = "50px";
-                celdaBoton.className = "text-center";
+                const btnClase = esIzquierda ? "btn-primary" : "btn-outline-danger";
+                const icono = esIzquierda ? "fa-arrow-right" : "fa-arrow-left";
+                const accion = esIzquierda ? "Asignar" : "Desasignar";
 
-                const celdaTexto = document.createElement("td");
-                celdaTexto.innerHTML = `<strong>${item.nombreCompleto}</strong><br/><small class="text-muted">${item.login}</small>`;
+                const celdaBoton = `<td class="text-center">
+                                        <button class="btn ${btnClase} btn-sm"
+                                                onclick="moverUsuario('${login}', '${esIzquierda}')"
+                                                title="${accion}">
+                                            <i class="fas ${icono}"></i>
+                                        </button>
+                                    </td>`;
 
-                if(esDisponible) {
-                    fila.appendChild(celdaTexto);
-                    fila.appendChild(celdaBoton);
+                if (esIzquierda) {
+                    fila.innerHTML = celdaInfo + celdaBoton;
                 } else {
-                    fila.appendChild(celdaBoton);
-                    fila.appendChild(celdaTexto);
+                    fila.innerHTML = celdaBoton + celdaInfo;
                 }
+
                 tbody.appendChild(fila);
             });
         }
 
-        function procesarMovimiento(login, esAsignacion) {
-            const idPerfil = cboPerfil.value;
-            const url = esAsignacion ? '@Url.Action("Asignar")' : '@Url.Action("Desasignar")';
+        function moverUsuario(login, esAsignacion) {
+            const idPerfil = cboRol.value;
+            const url = (esAsignacion === 'true')
+                        ? '@Url.Action("Asignar", "Seguridad")'
+                        : '@Url.Action("Desasignar", "Seguridad")';
 
-            // FormData para enviar POST
             const formData = new FormData();
             formData.append("login", login);
-            formData.append("idPerfil", idPerfil);
+
+            // Si es asignar, enviamos el rol compuesto (ej: ACA|DOC)
+            if(esAsignacion === 'true') {
+                formData.append("idPerfil", idPerfil); // Asegúrate que el controller espere 'idPerfil'
+            }
 
             fetch(url, { method: "POST", body: formData })
                 .then(res => res.json())
                 .then(data => {
                     if(data.exito) {
-                        cargarTablas(); // Recargar para ver el cambio
+                        cargarDatos(idPerfil); // Recargar tablas
                     } else {
-                        alert("Error al procesar la solicitud.");
+                        alert("No se pudo realizar la acción.");
                     }
                 });
         }
