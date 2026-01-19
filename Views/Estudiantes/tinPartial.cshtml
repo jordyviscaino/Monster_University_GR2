@@ -1,0 +1,120 @@
+﻿@model Monster_University_GR2.CapaEntidad.BoletinEstudianteViewModel
+
+<div id="areaImpresionReporte" style="position: relative; color: black; background: white; font-family: 'Times New Roman', Times, serif;">
+
+    <div style="position: absolute; top: 20%; left: 15%; width: 70%; opacity: 0.05; z-index: 0; pointer-events: none;">
+        <img src="https://tse3.mm.bing.net/th/id/OIP.GPfihB0zgPh_65RzRJTgUwHaIp?cb=ucfimg2&ucfimg=1&rs=1&pid=ImgDetMain&o=7&rm=3" style="width: 100%;">
+    </div>
+
+    <table style="width: 100%; border-bottom: 3px double #000; margin-bottom: 20px; z-index: 1; position: relative;">
+        <tr>
+            <td style="width: 20%; vertical-align: middle; text-align: center;">
+                <img src="https://tse1.mm.bing.net/th/id/OIP.vRk5pbGbb-buYxS8rh47uAAAAA?cb=ucfimg2&ucfimg=1&w=358&h=300&rs=1&pid=ImgDetMain&o=7&rm=3" width="80" height="80" alt="Escudo">
+            </td>
+            <td style="width: 60%; text-align: center; vertical-align: middle;">
+                <h2 style="margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px;">Monster University</h2>
+                <h4 style="margin: 5px 0 0 0; font-size: 16px; font-weight: normal;">Vicerrectorado Académico</h4>
+                <p style="margin: 0; font-size: 12px; font-style: italic;">"Sustentamos el futuro con gritos de calidad"</p>
+            </td>
+            <td style="width: 20%; vertical-align: middle; text-align: center;">
+                <div style="border: 1px solid #ccc; width: 70px; height: 80px; margin: 0 auto; overflow: hidden; background: #f9f9f9;">
+                    <img src="/images/usuarios/@(Model.Cedula).jpeg"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                         style="width:100%; height:100%; object-fit:cover;" />
+                    <span style="font-size: 10px; color: #aaa; display:none; line-height: 80px;">FOTO</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div style="text-align: center; margin-bottom: 25px; z-index: 1; position: relative;">
+        <h3 style="margin: 0; text-decoration: underline; font-size: 18px;">BOLETÍN DE CALIFICACIONES</h3>
+        <span style="font-size: 12px;">Periodo Académico: @Model.Periodo</span>
+    </div>
+
+    <div style="border: 1px solid #000; padding: 10px; margin-bottom: 20px; z-index: 1; position: relative; background: rgba(255,255,255,0.8);">
+        <table style="width: 100%; font-size: 13px;">
+            <tr>
+                <td style="font-weight: bold; width: 15%;">Estudiante:</td>
+                <td style="width: 45%;">@Model.Nombres</td>
+                <td style="font-weight: bold; width: 15%;">Cédula:</td>
+                <td>@Model.Cedula</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Carrera:</td>
+                <td>@Model.Carrera</td>
+                <td style="font-weight: bold;">Fecha:</td>
+                <td>@Model.FechaGeneracion</td>
+            </tr>
+        </table>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 12px; z-index: 1; position: relative;">
+        <thead>
+            <tr style="background-color: #eee;">
+                <th style="border: 1px solid #000; padding: 8px; width: 10%;">CÓDIGO</th>
+                <th style="border: 1px solid #000; padding: 8px;">ASIGNATURA</th>
+                <th style="border: 1px solid #000; padding: 8px; width: 8%; text-align: center;">P1</th>
+                <th style="border: 1px solid #000; padding: 8px; width: 8%; text-align: center;">P2</th>
+                <th style="border: 1px solid #000; padding: 8px; width: 8%; text-align: center;">P3</th>
+                <th style="border: 1px solid #000; padding: 8px; width: 10%; text-align: center;">PROM</th>
+                <th style="border: 1px solid #000; padding: 8px; width: 15%; text-align: center;">ESTADO</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Materias == null || Model.Materias.Count == 0)
+            {
+                <tr>
+                    <td colspan="7" style="border: 1px solid #000; padding: 30px; text-align: center; color: #777; font-style: italic;">
+                        -- No existen registros académicos para este periodo --
+                    </td>
+                </tr>
+            }
+            else
+            {
+                var i = 1;
+                foreach (var nota in Model.Materias)
+                {
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 5px; text-align: center;">MAT-@i.ToString("00")</td>
+
+                        <td style="border: 1px solid #000; padding: 5px;">@nota.Materia</td>
+
+                        <td style="border: 1px solid #000; padding: 5px; text-align: center;">@nota.Nota1.ToString("F2")</td>
+                        <td style="border: 1px solid #000; padding: 5px; text-align: center;">@nota.Nota2.ToString("F2")</td>
+                        <td style="border: 1px solid #000; padding: 5px; text-align: center;">@nota.Nota3.ToString("F2")</td>
+                        <td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold; background-color: #f9f9f9;">@nota.Promedio.ToString("F2")</td>
+                        <td style="border: 1px solid #000; padding: 5px; text-align: center;">
+                            @if (nota.Promedio >= 7)
+                            {
+                                <span style="font-weight:bold;">APROBADO</span>
+                            }
+                            else
+                            {
+                                <span style="font-weight:bold; text-decoration: underline;">REPROBADO</span>
+                            }
+                        </td>
+                    </tr>
+                    i++;
+                }
+            }
+        </tbody>
+    </table>
+
+    <div style="margin-top: 100px; width: 100%; z-index: 1; position: relative;">
+        <table style="width: 100%;">
+            <tr>
+                <td style="width: 10%;"></td>
+                <td style="width: 30%; border-top: 1px solid black; text-align: center; font-size: 11px;">
+                    <br>Secretaría General
+                </td>
+                <td style="width: 20%;"></td>
+                <td style="width: 30%; border-top: 1px solid black; text-align: center; font-size: 11px;">
+                    <br>Rectorado
+                </td>
+                <td style="width: 10%;"></td>
+            </tr>
+        </table>
+    </div>
+
+</div>

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿/*using System.Collections.Generic;
 
 namespace Monster_University_GR2.CapaEntidad
 {
@@ -30,4 +30,4 @@ namespace Monster_University_GR2.CapaEntidad
         public List<BoletinNotaDTO> Notas { get; set; }
         public double PromedioGeneral { get; set; }
     }
-}
+}*/

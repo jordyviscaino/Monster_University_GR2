@@ -1,4 +1,4 @@
-﻿@model List<Monster_University_GR2.CapaEntidad.UsuarioResumenViewModel>
+﻿@model List<Monster_University_GR2.Models.UsuarioResumenViewModel>
 
 @{
     ViewBag.Title = "Gestión de Usuarios";
@@ -16,6 +16,7 @@
     </div>
     <div class="card-body">
 
+        @* Notificaciones de TempData (Backend) *@
         @if (TempData["Exito"] != null)
         {
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -54,12 +55,17 @@
                                  style="width: 45px; height: 45px; object-fit: cover;"
                                  alt="Avatar" />
                         </td>
+
                         <td class="fw-bold align-middle">@item.Cedula</td>
-                        <td>@item.NombreCompleto</td>
+
+                        <td>@item.NombresCompletos</td>
+
                         <td>@item.Email</td>
-                        <td>@item.FechaRegistro.ToShortDateString()</td>
+
+                        <td>@item.FechaRegistro</td>
+
                         <td>
-                            @if (item.Estado == "A")
+                            @if (item.Estado == "ACTIVO" || item.Estado == "A")
                             {
                                 <span class="badge bg-success">Activo</span>
                             }
@@ -68,13 +74,17 @@
                                 <span class="badge bg-danger">Inactivo</span>
                             }
                         </td>
+
                         <td class="text-center">
                             <div class="btn-group" role="group">
                                 <a href="@Url.Action("Editar", "Usuarios", new { id = item.Cedula })"
                                    class="btn btn-outline-primary btn-sm" title="Editar">
                                     <i class="fas fa-pen"></i>
                                 </a>
-
+                                <a href="@Url.Action("Detalles", "Usuarios", new { id = item.Cedula })"
+                                   class="btn btn-info btn-sm text-white" title="Ver Detalles">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                                 <a href="@Url.Action("Detalles", "Usuarios", new { id = item.Cedula })"
                                    class="btn btn-outline-info btn-sm" title="Ver detalle">
                                     <i class="fas fa-eye"></i>
@@ -99,38 +109,51 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
 
+    <script>
         $(document).ready(function () {
-            // Inicialización ÚNICA de DataTables
+            // Inicialización de DataTables
             $('#tablaUsuarios').DataTable({
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
                 },
                 "pageLength": 10,
                 "responsive": true,
-                "order": [[1, "asc"]] // Ordenar por nombre por defecto
+                "order": [[1, "asc"]] // Ordenar por Cédula (columna 1) por defecto
             });
         });
 
-        // Función de Eliminar
+        // Función de Eliminar con Confirmación
         function confirmarEliminar(id) {
-            if (confirm("¿Está SEGURO de dar de baja a este usuario?\nEsta acción afectará sus roles y accesos.")) {
-                // Redirigir a la acción de eliminar
-                window.location.href = '@Url.Action("Eliminar", "Usuarios")?id=' + id;
-            }
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción dará de baja al usuario y afectará sus accesos.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Redirigir al controlador
+                    window.location.href = '@Url.Action("Eliminar", "Usuarios")?id=' + id;
+                }
+            })
         }
-        var mensajeExito = '@TempData["NotificacionExito"]';
+
+        // Mostrar SweetAlert si hay mensaje de éxito desde el Controlador
+        var mensajeExito = '@TempData["Exito"]'; // Usamos "Exito" para coincidir con el Controller
 
         if (mensajeExito && mensajeExito !== '') {
             Swal.fire({
-                position: 'top-end', // Aparece arriba a la derecha
+                position: 'top-end',
                 icon: 'success',
                 title: '¡Operación Exitosa!',
                 text: mensajeExito,
                 showConfirmButton: false,
-                timer: 2500, // Se va solo a los 2.5 segundos
-                toast: true, // Modo "Toast" (notificación pequeña)
+                timer: 2500,
+                toast: true,
                 background: '#e6fffa'
             });
         }

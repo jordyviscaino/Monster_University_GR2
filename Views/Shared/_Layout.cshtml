@@ -6,15 +6,26 @@
     // 1. Recuperamos la sesión
     string usuarioJson = Context.Session.GetString("UsuarioSesion");
     UsuarioSesion usuarioActual = null;
+    List<string> misPermisos = new List<string>();
 
     if (!string.IsNullOrEmpty(usuarioJson))
     {
         usuarioActual = JsonSerializer.Deserialize<UsuarioSesion>(usuarioJson);
+        // RECUPERAMOS LOS PERMISOS SI EXISTEN
+        if (usuarioActual != null && usuarioActual.Permisos != null)
+        {
+            misPermisos = usuarioActual.Permisos;
+        }
     }
 
-    // 2. Variable ROL para facilitar la lógica en el HTML
-    // Si no hay usuario, es "INV" (Invitado)
+    // 2. Variable ROL para lógica visual (Badges) o retrocompatibilidad
     string ROL = usuarioActual?.RolCodigo ?? "INV";
+
+    // 3. FUNCIÓN HELPER PARA VERIFICAR PERMISOS EN EL HTML
+    bool Tiene(string codigo)
+    {
+        return misPermisos.Contains(codigo);
+    }
 }
 
 <!DOCTYPE html>
@@ -33,7 +44,7 @@
     <style>
         /* --- ESTILO MONSTER UNIVERSITY --- */
         body {
-            /* Imagen de fondo (puedes cambiar la URL por una local o de internet) */
+            /* Imagen de fondo */
             background-image: url('https://th.bing.com/th/id/R.948befe35a671d585323c2694ea8739d?rik=gMvQ0N49NnBuIw&riu=http%3a%2f%2fwww.hdwallpapers.in%2fwalls%2fmonsters_university_2013-wide.jpg&ehk=kj3kpDQLftueE6%2f4%2fzEIHrOE91A2U4ytPw3pTTOTrEY%3d&risl=1&pid=ImgRaw&r=0');
             background-size: cover;
             background-position: center;
@@ -94,7 +105,7 @@
         <div class="container-fluid">
             <a class="navbar-brand text-white fw-bold" href="@Url.Action("Index", "Home")">
                 <img src="~/images/monster_logo.jpg" alt="Monster U."
-                      style="width:40px; height:auto; vertical-align:middle;"> MONSTER U.
+                     style="width:40px; height:auto; vertical-align:middle;"> MONSTER U.
             </a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -117,59 +128,131 @@
                         </ul>
                     </li>
 
-                    @if (ROL == "ADM" || ROL == "SEC")
+
+                    @if (ROL != "EST")
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdownReportes" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-file-alt text-danger"></i> Reportes
+                            </a>
+                            <ul class="dropdown-menu shadow border-0" aria-labelledby="navbarDropdownReportes">
+
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Reportes" asp-action="Seguridad">
+                                        <i class="fas fa-shield-alt me-2 text-warning"></i> Reporte de Seguridad
+                                    </a>
+                                </li>
+
+                                @if (ROL == "ADM")
+                                {
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="Sistema">
+                                            <i class="fas fa-database me-2 text-info"></i> Reporte del Sistema (NoSQL)
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                }
+
+                                <li><hr class="dropdown-divider"></li>
+
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Reportes" asp-action="Academico">
+                                        <i class="fas fa-user-graduate me-2 text-primary"></i> Ficha Académica
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                    @if (Tiene("DEP") || Tiene("CUR") || Tiene("CAR") || Tiene("EST") || Tiene("USU") || Tiene("ROL"))
                     {
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Administración</a>
                             <ul class="dropdown-menu">
 
                                 <li><h6 class="dropdown-header text-primary">Académico</h6></li>
-                                <li><a class="dropdown-item" href="#">Departamentos</a></li>
-                                <li><a class="dropdown-item" href="#">Cursos (Asignaturas)</a></li>
-                                <li><a class="dropdown-item" href="#">Asignar Carga</a></li>
-                                <li><a class="dropdown-item" href="@Url.Action("Index", "Estudiantes")">Estudiantes (CRUD)</a></li>
+                                @if (Tiene("DEP"))
+                                {
+                                    <li><a class="dropdown-item" href="#">Departamentos</a></li>
+                                }
+                                @if (Tiene("CUR"))
+                                {
+                                    <li><a class="dropdown-item" href="#">Cursos (Asignaturas)</a></li>
+                                }
+                                @if (Tiene("CAR"))
+                                {
+                                    <li><a class="dropdown-item" href="#">Asignar Carga</a></li>
+                                }
+                                @if (Tiene("EST"))
+                                {
+                                    <li><a class="dropdown-item" href="@Url.Action("Index", "Estudiantes")">Estudiantes (CRUD)</a></li>
+                                }
 
-                                @if (ROL == "ADM")
+                                @if (Tiene("USU") || Tiene("ROL"))
                                 {
                                     <li><hr class="dropdown-divider"></li>
                                     <li><h6 class="dropdown-header text-danger">Seguridad</h6></li>
-                                    <li><a class="dropdown-item" href="@Url.Action("Index", "Usuarios")">Gestión Usuarios</a></li>
-                                    <li><a class="dropdown-item" href="@Url.Action("AsignarRol", "Seguridad")">Asignar Roles</a></li>
+                                    @if (Tiene("USU"))
+                                    {
+                                        <li><a class="dropdown-item" href="@Url.Action("Index", "Usuarios")">Gestión Usuarios</a></li>
+                                    }
+                                    @if (Tiene("ROL"))
+                                    {
+                                        <li><a class="dropdown-item" href="@Url.Action("AsignarRol", "Seguridad")">Gestion de Roles</a></li>
+                                    }
                                 }
                             </ul>
                         </li>
                     }
 
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Procesos</a>
-                        <ul class="dropdown-menu">
+                    @if (Tiene("MAT") || Tiene("NOT") || Tiene("LIS"))
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Procesos</a>
+                            <ul class="dropdown-menu">
 
-                            @if (ROL == "EST")
-                            {
-                                <li><h6 class="dropdown-header">Estudiantes</h6></li>
-                                <li><a class="dropdown-item" href="#">Matrícula en Línea</a></li>
-                                <li><a class="dropdown-item" href="#">Consultar Notas</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                            }
+                                @if (Tiene("MAT") || Tiene("NOT"))
+                                {
+                                    <li><h6 class="dropdown-header">Estudiantes</h6></li>
+                                    @if (Tiene("MAT"))
+                                    {
+                                        <li><a class="dropdown-item" href="#">Matrícula en Línea</a></li>
+                                    }
+                                    @if (Tiene("NOT"))
+                                    {
+                                        <li><a class="dropdown-item" href="#">Consultar Notas</a></li>
+                                    }
+                                    <li><hr class="dropdown-divider"></li>
+                                }
 
-                            @if (ROL == "DOC")
-                            {
-                                <li><h6 class="dropdown-header">Docencia</h6></li>
-                                <li><a class="dropdown-item" href="#">Ingreso de Notas</a></li>
-                                <li><a class="dropdown-item" href="#">Listas de Clase</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                            }
+                                @if (Tiene("NOT") || Tiene("LIS"))
+                                {
+                                    <li><h6 class="dropdown-header">Docencia</h6></li>
+                                    @if (Tiene("NOT"))
+                                    {
+                                        <li><a class="dropdown-item" href="#">Ingreso de Notas</a></li>
+                                    }
+                                    @if (Tiene("LIS"))
+                                    {
+                                        <li><a class="dropdown-item" href="#">Listas de Clase</a></li>
+                                    }
+                                    <li><hr class="dropdown-divider"></li>
+                                }
 
-                            <li><a class="dropdown-item" href="@Url.Action("CambiarClave", "Access")">Cambiar Clave</a></li>
-                        </ul>
-                    </li>
+                                <li><a class="dropdown-item" href="@Url.Action("CambiarClave", "Access")">Cambiar Clave</a></li>
+                            </ul>
+                        </li>
+                    }
 
-                    @if (ROL == "ADM" || ROL == "SEC" || ROL == "DOC")
+                    @if (Tiene("RAC") || Tiene("RSE"))
                     {
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Reportes</a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="@Url.Action("ListaReportes", "Estudiantes")">Reporte Académico</a></li>                                @if (ROL == "ADM")
+                                @if (Tiene("RAC"))
+                                {
+                                    <li><a class="dropdown-item" href="@Url.Action("ListaReportes", "Estudiantes")">Reporte Académico</a></li>
+                                }
+                                @if (Tiene("RSE"))
                                 {
                                     <li><a class="dropdown-item" href="@Url.Action("ReporteSeguridad", "Usuarios")">Reporte Seguridad (Usuarios)</a></li>
                                 }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Monster_University_GR2.CapaEntidad; // Importante
-using System.Text.Json; // Importante para leer la sesión
+using Microsoft.AspNetCore.Http; // Para Session
+using System.Text.Json;        // Para JsonSerializer
+using Monster_University_GR2.Models; // <--- ESTA ES LA LÍNEA CLAVE QUE FALTABA
 
 namespace Monster_University_GR2.Controllers
 {
@@ -8,18 +9,19 @@ namespace Monster_University_GR2.Controllers
     {
         public IActionResult Index()
         {
-            // 1. Validar si existe la sesión (Si no, patear al login)
+            // 1. Validar si existe la sesión
             var sessionString = HttpContext.Session.GetString("UsuarioSesion");
 
             if (string.IsNullOrEmpty(sessionString))
             {
+                // Si no hay sesión, mandar al login
                 return RedirectToAction("Login", "Access");
             }
 
-            // 2. Deserializar el JSON a objeto UsuarioSesion
+            // 2. Deserializar: Ahora sí reconocerá "UsuarioSesion" gracias al using de arriba
             UsuarioSesion usuario = JsonSerializer.Deserialize<UsuarioSesion>(sessionString);
 
-            // 3. Enviar a la vista
+            // 3. Retornar vista
             return View(usuario);
         }
     }

@@ -1,0 +1,85 @@
+[{
+  "_id": {
+    "$oid": "6966fc55886a1f585844ebf2"
+  },
+  "cedula": "1705307906",
+  "nombres": "FIDEL ANTONIO",
+  "apellidos": "VISCAINO BURGOS",
+  "email": "ab.fidelviscaino@hotmail.com",
+  "password_hash": "5de64494ec70da87bff861bb0ad38747240b415fa2e6dbb1659c97fb73cd1489",
+  "estado": "ACTIVO",
+  "roles": [
+    "DOC"
+  ],
+  "datos_personales": {
+    "sexo": "M",
+    "estado_civil": "SOLTERO",
+    "fecha_nacimiento": {
+      "$date": "2007-12-05T09:45:12.790Z"
+    },
+    "direccion": "S/D",
+    "telefono": "0000000"
+  },
+  "info_empleado": {
+    "departamento": "ACA",
+    "cargo": "Docente Titular"
+  }
+},
+{
+  "_id": {
+    "$oid": "6966fc55886a1f585844ebf3"
+  },
+  "cedula": "1712424181",
+  "nombres": "MIRIAN MARISOL",
+  "apellidos": "TAPIA MORALES",
+  "email": "tapiamarisol721@gmail.com",
+  "password_hash": "71df9539796e9eeb12c7a03e26021a6d7f800d2b753362bdccdd05bcdd6d9253",
+  "estado": "ACTIVO",
+  "roles": [
+    "SEC"
+  ],
+  "datos_personales": {
+    "sexo": "F",
+    "estado_civil": "DIVORCIADO",
+    "fecha_nacimiento": {
+      "$date": "2003-03-12T00:00:00.000Z"
+    },
+    "direccion": "BUENAVENTURA",
+    "telefono": "02845520"
+  },
+  "info_empleado": {
+    "departamento": "ADM",
+    "cargo": "Secretaria General"
+  }
+},
+{
+  "_id": {
+    "$oid": "6966fc55886a1f585844ebf4"
+  },
+  "cedula": "1753783768",
+  "nombres": "JORDY ANTHONY",
+  "apellidos": "VISCAINO TAPIA",
+  "email": "jordyviscainoa@hotmail.com",
+  "password_hash": "7d9e20060a9e9ce36e2f9fd7b72909727c3a822461fd610ed5c3d0a96d604c60",
+  "estado": "ACTIVO",
+  "roles": [
+    "ADM"
+  ],
+  "datos_personales": {
+    "sexo": "M",
+    "estado_civil": "SOLTERO",
+    "fecha_nacimiento": {
+      "$date": "2003-06-14T00:00:00.000Z"
+    },
+    "direccion": "BUENAVENTURA DE CHILLOGALLO",
+    "telefono": "02845520"
+  },
+  "info_empleado": {
+    "departamento": "SYS",
+    "cargo": "Administrador del Sistema"
+  },
+  "debe_cambiar_pwd": "S",
+  "fecha_modificacion": {
+    "$date": "2026-01-14T15:19:17.606Z"
+  }
+}]

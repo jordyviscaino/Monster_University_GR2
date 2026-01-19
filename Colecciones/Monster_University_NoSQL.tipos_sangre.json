@@ -1,0 +1,28 @@
+[{
+  "_id": {
+    "$oid": "6967bd4fd3d7c533e2a24376"
+  },
+  "codigo": "OP",
+  "descripcion": "O Positivo"
+},
+{
+  "_id": {
+    "$oid": "6967bd4fd3d7c533e2a24377"
+  },
+  "codigo": "ON",
+  "descripcion": "O Negativo"
+},
+{
+  "_id": {
+    "$oid": "6967bd4fd3d7c533e2a24378"
+  },
+  "codigo": "AP",
+  "descripcion": "A Positivo"
+},
+{
+  "_id": {
+    "$oid": "6967bd4fd3d7c533e2a24379"
+  },
+  "codigo": "AN",
+  "descripcion": "A Negativo"
+}]

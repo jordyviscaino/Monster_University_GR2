@@ -1,16 +1,32 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Monster_University_GR2.CapaNegocio; // Referencia a Negocio
-using Monster_University_GR2.CapaEntidad; // Referencia a Entidad
-using System.Text.Json; // Para guardar el objeto en sesión
+using Microsoft.AspNetCore.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+
+
+using Monster_University_GR2.CapaNegocio;
+using Monster_University_GR2.CapaEntidad;
+using Monster_University_GR2.Models;
 
 namespace Monster_University_GR2.Controllers
 {
     public class AccessController : Controller
     {
-        // GET: Access/Login
+        private readonly ServicioAcceso _servicioAcceso;
+        private readonly ServicioCorreo _servicioCorreo;
+
+        public AccessController(ServicioAcceso servicioAcceso, ServicioCorreo servicioCorreo)
+        {
+            _servicioAcceso = servicioAcceso;
+            _servicioCorreo = servicioCorreo;
+        }
+
+        [HttpGet]
         public IActionResult Login()
         {
-            // Validar si ya hay sesión (Evitar doble login)
+            // Si ya hay sesión, ir al inicio
             if (HttpContext.Session.GetString("UsuarioSesion") != null)
             {
                 return RedirectToAction("Index", "Home");
@@ -18,154 +34,163 @@ namespace Monster_University_GR2.Controllers
             return View();
         }
 
-        // POST: Access/Login
         [HttpPost]
-        public IActionResult Login(string userLogin, string passLogin)
+        public async Task<IActionResult> Login(string userLogin, string passLogin)
         {
-            CN_Usuario logica = new CN_Usuario();
-
-            // 1. Validar credenciales
-            UsuarioSesion usuario = logica.ValidarUsuario(userLogin, passLogin);
+            Usuario usuario = await _servicioAcceso.ValidarLogin(userLogin, passLogin);
 
             if (usuario != null)
             {
-                // Verificar si tiene la bandera de "Cambiar Contraseña" activa ('S')
-                if (usuario.DebeCambiarPassword == "S")
-                {
-                    // OJO: Aún no creamos esta vista, pero preparémoslo.
-                    // Guardamos el correo en TempData para saber a quién cambiarle la clave
-                    TempData["CorreoCambio"] = usuario.Email;
 
-                    return RedirectToAction("CambiarClave", "Access");
+                if (usuario.DebeCambiarPwd == "S")
+                {
+                    TempData["EmailPendiente"] = usuario.Email;
+                    return RedirectToAction("CambiarClave");
                 }
 
-                // Si no tiene bandera, flujo normal (Dashboard)
-                string usuarioJson = JsonSerializer.Serialize(usuario);
-                HttpContext.Session.SetString("UsuarioSesion", usuarioJson);
+                UsuarioSesion sesionModel = new UsuarioSesion
+                {
+                    Id = usuario.Id,
+                    Nombre = usuario.Nombres,
+                    Apellido = usuario.Apellidos,
+                    Email = usuario.Email,
+                    RolCodigo = usuario.Roles.FirstOrDefault() ?? "INV", // Rol principal
+                    Permisos = new List<string>() // Aquí luego cargaremos permisos de security_profiles
+                };
+
+                string jsonSesion = JsonSerializer.Serialize(sesionModel);
+                HttpContext.Session.SetString("UsuarioSesion", jsonSesion);
 
                 return RedirectToAction("Index", "Home");
             }
-            else
-            {
-                ViewBag.Error = "Credenciales incorrectas o usuario inactivo.";
-                return View();
-            }
-        } 
 
-        public IActionResult Logout()
-        {
-            HttpContext.Session.Clear(); // Borrar sesión
-            return RedirectToAction("Login");
+            ViewBag.Error = "Credenciales incorrectas o usuario inactivo.";
+            return View();
         }
 
-        // GET: Access/Register
+    
+        [HttpGet]
         public IActionResult Register()
         {
-            CN_Usuario logica = new CN_Usuario();
-            // Llenar ViewBags para los dropdowns
-            ViewBag.ListaSexos = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(logica.ListarSexos(), "PsexCodigo", "PsexDescri");
-            ViewBag.ListaEstadoCivil = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(logica.ListarEstados(), "PeescCodigo", "PeescDescri");
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> Register(RegistroViewModel modelo)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(modelo);
+            }
+
+            string resultado = await _servicioAcceso.RegistrarUsuarioInvitado(
+                modelo.Cedula,
+                modelo.Nombres,
+                modelo.Apellidos,  // Ya no dará error
+                modelo.Email,
+                modelo.TelefonoCelular, // Ya no dará error
+                modelo.Password
+            );
+
+            if (resultado == "OK")
+            {
+                ViewBag.Exito = "Cuenta creada correctamente.";
+                return View("Login");
+            }
+            else
+            {
+                ViewBag.Error = resultado;
+                return View(modelo);
+            }
+        }
+
+[HttpGet]
+        public IActionResult Recuperar()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Recuperar(string correo)
+        {
+            // 1. Generar clave temporal y actualizar BD (flag: 'S')
+            string claveTemporal = await _servicioAcceso.RecuperarContrasena(correo);
+
+            if (claveTemporal != null)
+            {
+                // 2. Enviar correo
+                string asunto = "Recuperación de Acceso - Monster University";
+                string cuerpo = $@"
+                    <h3>Restablecimiento de Contraseña</h3>
+                    <p>Has solicitado recuperar tu acceso al sistema académico.</p>
+                    <p>Tu contraseña temporal es: <strong>{claveTemporal}</strong></p>
+                    <p>Por seguridad, el sistema te pedirá cambiarla inmediatamente al ingresar.</p>
+                    <hr>
+                    <small>Si no solicitaste esto, contacta a Soporte TI.</small>";
+
+                await _servicioCorreo.EnviarCorreo(correo, asunto, cuerpo);
+
+                ViewBag.Exito = "Se ha enviado una contraseña temporal a tu correo.";
+            }
+            else
+            {
+            
+                ViewBag.Error = "El correo ingresado no se encuentra registrado.";
+            }
 
             return View();
         }
 
-        // POST: Access/Register
-        [HttpPost]
-        public IActionResult Register(RegistroViewModel modelo)
-        {
-            CN_Usuario logica = new CN_Usuario();
-
-            if (ModelState.IsValid)
-            {
-                string mensaje = "";
-                bool respuesta = logica.Registrar(modelo, out mensaje);
-
-                if (respuesta)
-                {
-                    ViewBag.Exito = "Usuario creado correctamente. Ya puede iniciar sesión.";
-                    return View("Login"); // O RedirectToAction("Login")
-                }
-                else
-                {
-                    ViewBag.Error = mensaje;
-                }
-            }
-
-            // Recargar listas si falla
-            ViewBag.ListaSexos = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(logica.ListarSexos(), "PsexCodigo", "PsexDescri");
-            ViewBag.ListaEstadoCivil = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(logica.ListarEstados(), "PeescCodigo", "PeescDescri");
-
-            return View(modelo);
-        }
-        // GET: Access/Recuperar
-        // GET: Access/Recuperar
-            public IActionResult Recuperar()
-            {
-                return View();
-            }
-
-            // POST: Access/Recuperar
-            [HttpPost]
-            public IActionResult Recuperar(string correo)
-            {
-                CN_Usuario logica = new CN_Usuario();
-                string mensaje = "";
-
-                bool respuesta = logica.RecuperarContrasena(correo, out mensaje);
-
-                if (respuesta)
-                {
-                    ViewBag.Exito = "Correo enviado exitosamente. Revisa tu bandeja de entrada.";
-                }
-                else
-                {
-                    ViewBag.Error = mensaje;
-                }
-
-                return View();
-        }
-        // GET: Access/CambiarClave
+    
+        [HttpGet]
         public IActionResult CambiarClave()
         {
-            if (TempData["CorreoCambio"] == null)
+            string email = TempData["EmailPendiente"] as string;
+
+            if (string.IsNullOrEmpty(email))
+            {
+                string jsonSesion = HttpContext.Session.GetString("UsuarioSesion");
+                if (!string.IsNullOrEmpty(jsonSesion))
+                {
+                    var sesion = JsonSerializer.Deserialize<UsuarioSesion>(jsonSesion);
+                    email = sesion.Email;
+                }
+            }
+
+            if (string.IsNullOrEmpty(email))
             {
                 return RedirectToAction("Login");
             }
 
-            string correo = TempData["CorreoCambio"].ToString();
+            CambiarClaveViewModel model = new CambiarClaveViewModel { Email = email };
+            return View(model);
+        }
 
-            CambiarClaveViewModel modelo = new CambiarClaveViewModel
+        [HttpPost]
+        public async Task<IActionResult> CambiarClave(CambiarClaveViewModel modelo)
+        {
+            if (!ModelState.IsValid)
             {
-                Email = correo
-            };
+                return View(modelo);
+            }
 
+            bool resultado = await _servicioAcceso.CambiarContrasena(modelo.Email, modelo.NewPassword);
+
+            if (resultado)
+            {
+           
+                ViewBag.Exito = "Contraseña actualizada. Ingresa nuevamente.";
+                return View("Login");
+            }
+
+            ViewBag.Error = "Error al actualizar la contraseña.";
             return View(modelo);
         }
 
-        // POST: Access/CambiarClave
-        [HttpPost]
-        public IActionResult CambiarClave(CambiarClaveViewModel modelo)
+  
+        public IActionResult Logout()
         {
-            if (ModelState.IsValid)
-            {
-                CN_Usuario logica = new CN_Usuario();
-                string mensaje = "";
-
-                bool resultado = logica.CambiarClaveObligatoria(modelo.Email, modelo.NewPassword, out mensaje);
-
-                if (resultado)
-                {
-                    ViewBag.Exito = "Contraseña actualizada correctamente. Inicia sesión con tu nueva clave.";
-                    // Limpiamos sesión por seguridad y mandamos al login
-                    return View("Login");
-                }
-                else
-                {
-                    ViewBag.Error = mensaje;
-                }
-            }
-
-            return View(modelo);
+            HttpContext.Session.Clear();
+            return RedirectToAction("Login");
         }
     }
 }

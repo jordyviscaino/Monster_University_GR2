@@ -1,185 +1,404 @@
 ﻿@{
-    ViewBag.Title = "Gestión de Roles";
+    ViewBag.Title = "Gestión de Roles y Permisos";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+<style>
+    .accordion-button:not(.collapsed) {
+        background-color: #e7f1ff;
+        color: #004aad;
+        font-weight: bold;
+    }
+    .btn-transfer {
+        width: 48px;
+        height: 40px;           
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
 <div class="card shadow border-0 mt-4">
-    <div class="card-header bg-dark text-white">
-        <h5 class="mb-0"><i class="fas fa-users-cog"></i> Asignación de Roles de Personal</h5>
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-cogs"></i> Gestión de Perfiles</h5>
     </div>
+
     <div class="card-body">
 
         <div class="row mb-4">
             <div class="col-md-8 offset-md-2">
-                <label class="form-label fw-bold">Seleccione Departamento y Cargo:</label>
-                <select id="cboRol" class="form-select form-select-lg" asp-items="ViewBag.ListaRoles">
+                <label class="form-label fw-bold text-primary">1. Seleccione el Rol a Configurar:</label>
+                <select id="cboRol" class="form-select form-select-lg shadow-sm" asp-items="ViewBag.ListaRoles">
                     <option value="">-- Seleccione un Cargo --</option>
                 </select>
             </div>
         </div>
 
-        <hr />
+        <div id="panelGestion" style="display:none;">
 
-        <div class="row">
+            <ul class="nav nav-tabs nav-fill" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold" id="usuarios-tab" data-bs-toggle="tab" data-bs-target="#tab-usuarios" type="button" role="tab">
+                        <i class="fas fa-users me-2"></i>Asignar Usuarios
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="opciones-tab" data-bs-toggle="tab" data-bs-target="#tab-opciones" type="button" role="tab">
+                        <i class="fas fa-list-check me-2"></i>Asignar Opciones de Menú
+                    </button>
+                </li>
+            </ul>
 
-            <div class="col-md-5">
-                <h6 class="text-center text-muted fw-bold">Personal Disponible (Otros Cargos)</h6>
-                <div class="card bg-light">
-                    <div class="card-body p-0" style="height: 350px; overflow-y: auto;">
-                        <table class="table table-hover table-sm mb-0 align-middle">
-                            <thead class="table-secondary sticky-top">
-                                <tr>
-                                    <th class="ps-3">Usuario</th>
-                                    <th class="text-center">Asignar</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bodyDisponibles">
-                            </tbody>
-                        </table>
+            <div class="tab-content border border-top-0 p-4 rounded-bottom shadow-sm bg-white" id="myTabContent">
+
+                <div class="tab-pane fade show active" id="tab-usuarios" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="text-center text-muted fw-bold mb-0">Disponibles</h6>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="chkAllDisponibles" onchange="toggleAll(this, 'bodyDisponibles')">
+                                    <label class="form-check-label small" for="chkAllDisponibles">Seleccionar todo</label>
+                                </div>
+                            </div>
+                            <div class="card bg-light">
+                                <div class="card-body p-0" style="height: 300px; overflow-y: auto;">
+                                    <table class="table table-hover table-sm mb-0 align-middle">
+                                        <tbody id="bodyDisponibles"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 d-flex flex-column justify-content-center align-items-center gap-2">
+                            <button id="btnAsignarSeleccionados" class="btn btn-success btn-transfer" title="Asignar seleccionados" onclick="asignarSeleccionados()">
+                                <i class="fas fa-angle-double-right"></i>
+                            </button>
+                            <button id="btnDesasignarSeleccionados" class="btn btn-danger btn-transfer" title="Retirar seleccionados" onclick="desasignarSeleccionados()">
+                                <i class="fas fa-angle-double-left"></i>
+                            </button>
+                        </div>
+
+                        <div class="col-md-5">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="text-center text-success fw-bold mb-0">Asignados al Rol</h6>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="chkAllAsignados" onchange="toggleAll(this, 'bodyAsignados')">
+                                    <label class="form-check-label small" for="chkAllAsignados">Seleccionar todo</label>
+                                </div>
+                            </div>
+                            <div class="card border-success">
+                                <div class="card-body p-0" style="height: 300px; overflow-y: auto;">
+                                    <table class="table table-hover table-sm mb-0 align-middle">
+                                        <tbody id="bodyAsignados"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div id="msgDisponibles" class="text-center small text-muted mt-1">Esperando selección...</div>
-            </div>
 
-            <div class="col-md-2 d-flex flex-column justify-content-center align-items-center">
-                <i class="fas fa-exchange-alt fa-2x text-muted opacity-25"></i>
-            </div>
+                <div class="tab-pane fade" id="tab-opciones" role="tabpanel">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="text-muted small align-self-center">
+                            Marque las opciones que este rol podrá ver en el sistema.
+                        </div>
+                        <button type="button" class="btn btn-success fw-bold" onclick="guardarPermisos()">
+                            <i class="fas fa-save me-2"></i> Guardar Permisos
+                        </button>
+                    </div>
 
-            <div class="col-md-5">
-                <h6 class="text-center text-success fw-bold">Personal Asignado (Actuales)</h6>
-                <div class="card border-success">
-                    <div class="card-body p-0" style="height: 350px; overflow-y: auto;">
-                        <table class="table table-hover table-sm mb-0 align-middle">
-                            <thead class="table-success sticky-top">
-                                <tr>
-                                    <th class="text-center">Retirar</th>
-                                    <th class="ps-3">Usuario</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bodyAsignados">
-                            </tbody>
-                        </table>
+                    <div id="contenedorArbol">
                     </div>
                 </div>
-                <div id="msgAsignados" class="text-center small text-muted mt-1">Esperando selección...</div>
-            </div>
 
+            </div>
         </div>
+
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const cboRol = document.getElementById("cboRol");
+        const panelGestion = document.getElementById("panelGestion");
+
+        // --- LÓGICA DE USUARIOS (MODIFICADA A CHECKBOXES) ---
         const bodyDisponibles = document.getElementById("bodyDisponibles");
         const bodyAsignados = document.getElementById("bodyAsignados");
+        const btnAsignarSeleccionados = document.getElementById("btnAsignarSeleccionados");
+        const btnDesasignarSeleccionados = document.getElementById("btnDesasignarSeleccionados");
 
-        // EVENTO: Cambio en el Combo Box
+        document.addEventListener('DOMContentLoaded', () => {
+            btnAsignarSeleccionados.disabled = true;
+            btnDesasignarSeleccionados.disabled = true;
+
+            pintarTabla(bodyDisponibles, [], true);
+            pintarTabla(bodyAsignados, [], false);
+
+            // Mensaje en contenedor de opciones
+            const cont = document.getElementById('contenedorArbol');
+            cont.innerHTML = '<div class="text-muted p-3">Seleccione un rol para cargar las opciones del sistema.</div>';
+
+            panelGestion.style.display = "block";
+        });
+
         cboRol.addEventListener("change", function() {
             const idPerfil = cboRol.value;
-            console.log("Seleccionado:", idPerfil); // Debug 1
-
             if(!idPerfil) {
-                bodyDisponibles.innerHTML = "";
-                bodyAsignados.innerHTML = "";
+                pintarTabla(bodyDisponibles, [], true);
+                pintarTabla(bodyAsignados, [], false);
+                document.getElementById('contenedorArbol').innerHTML = '<div class="text-muted p-3">Seleccione un rol para cargar las opciones del sistema.</div>';
+                btnAsignarSeleccionados.disabled = true;
+                btnDesasignarSeleccionados.disabled = true;
+                // reset select-all boxes
+                const chkAllD = document.getElementById('chkAllDisponibles');
+                const chkAllA = document.getElementById('chkAllAsignados');
+                if (chkAllD) chkAllD.checked = false;
+                if (chkAllA) chkAllA.checked = false;
                 return;
             }
 
-            cargarDatos(idPerfil);
+            panelGestion.style.display = "block";
+
+            cargarUsuarios(idPerfil);
+            cargarOpciones(idPerfil);
         });
 
-        function cargarDatos(idPerfil) {
-            // URL correcta para llamar al Action del Controller
-            const url = `@Url.Action("ObtenerTablas", "Seguridad")?idPerfil=${encodeURIComponent(idPerfil)}`;
-
-            fetch(url)
-                .then(response => {
-                    if (!response.ok) throw new Error("Error en la red");
-                    return response.json();
-                })
+        function cargarUsuarios(idPerfil) {
+             const url = `@Url.Action("ObtenerTablas", "Seguridad")?idPerfil=${encodeURIComponent(idPerfil)}`;
+             fetch(url)
+                .then(r => r.json())
                 .then(data => {
-                    console.log("Datos recibidos del servidor:", data); // Debug 2: ¡MIRA LA CONSOLA DEL NAVEGADOR!
-
-                    // Renderizamos usando las propiedades en MINÚSCULA (camelCase) por estándar JSON
                     pintarTabla(bodyDisponibles, data.disponibles, true);
                     pintarTabla(bodyAsignados, data.asignados, false);
-
-                    // Actualizar contadores
-                    document.getElementById("msgDisponibles").innerText = `${data.disponibles.length} registros encontrados.`;
-                    document.getElementById("msgAsignados").innerText = `${data.asignados.length} registros encontrados.`;
+                    const chkAllD = document.getElementById('chkAllDisponibles');
+                    const chkAllA = document.getElementById('chkAllAsignados');
+                    if (chkAllD) chkAllD.checked = false;
+                    if (chkAllA) chkAllA.checked = false;
+                    btnAsignarSeleccionados.disabled = true;
+                    btnDesasignarSeleccionados.disabled = true;
                 })
-                .catch(error => {
-                    console.error("Error cargando tablas:", error);
-                    alert("Error al cargar datos. Revise la consola.");
+                .catch(err => {
+                    console.error(err);
+                    pintarTabla(bodyDisponibles, [], true);
+                    pintarTabla(bodyAsignados, [], false);
                 });
         }
 
-        function pintarTabla(tbody, lista, esIzquierda) {
-            tbody.innerHTML = "";
+        function pintarTabla(tbody, lista, esIzq) {
+             tbody.innerHTML = "";
+             if (!Array.isArray(lista) || lista.length === 0) {
+                 tbody.innerHTML = `<tr><td class="ps-3 text-muted small">No hay registros</td></tr>`;
+                 return;
+             }
 
-            if (lista.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted py-3">No hay usuarios</td></tr>`;
+             lista.forEach(item => {
+                 const nombre = item.nombreCompleto || item.NombreCompleto || item.Nombre || "---";
+                 const login = item.login || item.Login || item.Login || "";
+
+                 // checkbox + texto
+                 let tr = `<tr>
+                                <td class="ps-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input chk-user" type="checkbox" value="${login}" data-login="${login}" onchange="onUserCheckboxChange()">
+                                        <label class="form-check-label">${nombre}<br><small class="text-muted">${login}</small></label>
+                                    </div>
+                                </td>
+                            </tr>`;
+                 tbody.innerHTML += tr;
+             });
+        }
+
+        function toggleAll(chkMaster, tbodyId) {
+            const tbody = document.getElementById(tbodyId);
+            if (!tbody) return;
+            const items = tbody.querySelectorAll('.chk-user');
+            items.forEach(i => i.checked = chkMaster.checked);
+            onUserCheckboxChange();
+        }
+
+        function getSelectedLogins(tbody) {
+            const arr = [];
+            tbody.querySelectorAll('.chk-user:checked').forEach(chk => {
+                if (chk.value) arr.push(chk.value);
+            });
+            return arr;
+        }
+
+        function onUserCheckboxChange() {
+            const anyDisponibles = bodyDisponibles.querySelectorAll('.chk-user:checked').length > 0;
+            const anyAsignados = bodyAsignados.querySelectorAll('.chk-user:checked').length > 0;
+            btnAsignarSeleccionados.disabled = !anyDisponibles || !cboRol.value;
+            btnDesasignarSeleccionados.disabled = !anyAsignados;
+        }
+
+        function asignarSeleccionados() {
+            const seleccion = getSelectedLogins(bodyDisponibles);
+            if (!seleccion.length) {
+                Swal.fire('Atención', 'Seleccione al menos un usuario disponible', 'warning');
+                return;
+            }
+            if (!cboRol.value) {
+                Swal.fire('Atención', 'Seleccione primero un perfil', 'warning');
                 return;
             }
 
-            lista.forEach(item => {
-                // OJO AQUÍ: Usamos item.nombreCompleto y item.login (Minúsculas)
-                // Si en tu consola ves que llegan con Mayúscula, cámbialo aquí.
-                const nombre = item.nombreCompleto || item.NombreCompleto || "---";
-                const login = item.login || item.Login || "---";
+            btnAsignarSeleccionados.disabled = true;
+            Swal.fire({title: 'Asignando...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
 
-                const fila = document.createElement("tr");
+            const promesas = seleccion.map(login =>
+                $.ajax({
+                    url: '@Url.Action("Asignar", "Seguridad")',
+                    type: 'POST',
+                    data: { login: login, idPerfil: cboRol.value }
+                })
+            );
 
-                const celdaInfo = `<td class="ps-3">
-                                    <div class="fw-bold text-dark">${nombre}</div>
-                                    <div class="small text-muted">${login}</div>
-                                   </td>`;
-
-                const btnClase = esIzquierda ? "btn-primary" : "btn-outline-danger";
-                const icono = esIzquierda ? "fa-arrow-right" : "fa-arrow-left";
-                const accion = esIzquierda ? "Asignar" : "Desasignar";
-
-                const celdaBoton = `<td class="text-center">
-                                        <button class="btn ${btnClase} btn-sm"
-                                                onclick="moverUsuario('${login}', '${esIzquierda}')"
-                                                title="${accion}">
-                                            <i class="fas ${icono}"></i>
-                                        </button>
-                                    </td>`;
-
-                if (esIzquierda) {
-                    fila.innerHTML = celdaInfo + celdaBoton;
-                } else {
-                    fila.innerHTML = celdaBoton + celdaInfo;
-                }
-
-                tbody.appendChild(fila);
+            $.when.apply($, promesas).done(function() {
+                Swal.close();
+                Swal.fire('Listo', 'Usuarios asignados correctamente', 'success');
+                cargarUsuarios(cboRol.value);
+            }).fail(function() {
+                Swal.close();
+                Swal.fire('Error', 'Ocurrió un error al asignar uno o más usuarios', 'error');
+                cargarUsuarios(cboRol.value);
+            }).always(function() {
+                btnAsignarSeleccionados.disabled = false;
             });
         }
 
-        function moverUsuario(login, esAsignacion) {
-            const idPerfil = cboRol.value;
-            const url = (esAsignacion === 'true')
-                        ? '@Url.Action("Asignar", "Seguridad")'
-                        : '@Url.Action("Desasignar", "Seguridad")';
-
-            const formData = new FormData();
-            formData.append("login", login);
-
-            // Si es asignar, enviamos el rol compuesto (ej: ACA|DOC)
-            if(esAsignacion === 'true') {
-                formData.append("idPerfil", idPerfil); // Asegúrate que el controller espere 'idPerfil'
+        function desasignarSeleccionados() {
+            const seleccion = getSelectedLogins(bodyAsignados);
+            if (!seleccion.length) {
+                Swal.fire('Atención', 'Seleccione al menos un usuario asignado', 'warning');
+                return;
             }
 
-            fetch(url, { method: "POST", body: formData })
-                .then(res => res.json())
-                .then(data => {
-                    if(data.exito) {
-                        cargarDatos(idPerfil); // Recargar tablas
-                    } else {
-                        alert("No se pudo realizar la acción.");
-                    }
+            Swal.fire({
+                title: 'Confirmar',
+                text: `¿Retirar ${seleccion.length} usuario(s) del rol?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, retirar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                btnDesasignarSeleccionados.disabled = true;
+                Swal.fire({title: 'Retirando...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+
+                const promesas = seleccion.map(login =>
+                    $.ajax({
+                        url: '@Url.Action("Desasignar", "Seguridad")',
+                        type: 'POST',
+                        data: { login: login }
+                    })
+                );
+
+                $.when.apply($, promesas).done(function() {
+                    Swal.close();
+                    Swal.fire('Listo', 'Usuarios retirados correctamente', 'success');
+                    cargarUsuarios(cboRol.value);
+                }).fail(function() {
+                    Swal.close();
+                    Swal.fire('Error', 'Ocurrió un error al retirar uno o más usuarios', 'error');
+                    cargarUsuarios(cboRol.value);
+                }).always(function() {
+                    btnDesasignarSeleccionados.disabled = false;
                 });
+            });
+        }
+
+        function cargarOpciones(idPerfil) {
+            const container = document.getElementById("contenedorArbol");
+            container.innerHTML = '<div class="text-center p-4"><div class="spinner-border text-primary"></div></div>';
+
+            const url = `@Url.Action("ObtenerOpcionesPorRol", "Seguridad")?idPerfil=${encodeURIComponent(idPerfil)}`;
+
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error('Respuesta no OK: ' + res.status);
+                    return res.json();
+                })
+                .then(data => {
+                    const sistemas = Array.isArray(data) ? data : (data.sistemas || data.result || data.lista || []);
+                    let html = '<div class="accordion" id="accOpciones">';
+
+                    sistemas.forEach((sisRaw, index) => {
+                        const nombreSis = sisRaw.nombre || sisRaw.Nombre || sisRaw.sistemaNombre || sisRaw.SistemaNombre || sisRaw.sistema || `Sistema ${index + 1}`;
+                        const opcionesRaw = Array.isArray(sisRaw.opciones) ? sisRaw.opciones :
+                                            Array.isArray(sisRaw.Opciones) ? sisRaw.Opciones : [];
+
+                        let idHead = "h" + index;
+                        let idCol = "c" + index;
+
+                        html += `
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="${idHead}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${idCol}" aria-expanded="false" aria-controls="${idCol}">
+                                    ${nombreSis}
+                                </button>
+                            </h2>
+                            <div id="${idCol}" class="accordion-collapse collapse" data-bs-parent="#accOpciones">
+                                <div class="accordion-body">
+                                    <div class="list-group">`;
+
+                        if (opcionesRaw.length === 0) {
+                            html += `<div class="text-muted small p-2">No hay opciones registradas.</div>`;
+                        } else {
+                            opcionesRaw.forEach(opRaw => {
+                                const codigo = opRaw.codigo || opRaw.Codigo || opRaw.XeopcCodigo || "";
+                                const nombreOp = opRaw.nombre || opRaw.Nombre || opRaw.XeopcDescri || "Opción";
+                                const activo = !!(opRaw.activo || opRaw.Activo || opRaw.marcado || opRaw.Marcado);
+
+                                const checked = activo ? "checked" : "";
+                                html += `
+                                    <label class="list-group-item">
+                                        <input class="form-check-input me-2 chk-opcion" type="checkbox" value="${codigo}" ${checked}>
+                                        ${nombreOp}
+                                    </label>`;
+                            });
+                        }
+
+                        html += `   </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+
+                    html += '</div>';
+                    container.innerHTML = html;
+                })
+                .catch(err => {
+                    console.error('Error cargarOpciones:', err);
+                    container.innerHTML = `<div class="alert alert-danger">No se pudieron cargar las opciones. Revise la consola.</div>`;
+                });
+        }
+
+        function guardarPermisos() {
+            const idPerfil = cboRol.value;
+            const marcados = [];
+            document.querySelectorAll('.chk-opcion:checked').forEach(chk => marcados.push(chk.value));
+
+            $.ajax({
+                url: '@Url.Action("GuardarPermisos", "Seguridad")',
+                type: 'POST',
+                data: { idPerfil: idPerfil, opciones: marcados },
+                traditional: true,
+                success: function(res) {
+                    if(res.exito) {
+                        Swal.fire('Guardado', 'Permisos actualizados correctamente', 'success');
+                    } else {
+                        Swal.fire('Error', 'No se pudo guardar', 'error');
+                    }
+                },
+                error: function(xhr, status, err) {
+                    console.error(xhr, status, err);
+                    Swal.fire('Error', 'Error en la petición. Revise la consola.', 'error');
+                }
+            });
         }
     </script>
 }

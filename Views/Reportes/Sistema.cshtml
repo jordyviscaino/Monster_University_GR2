@@ -1,0 +1,157 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@{
+    ViewBag.Title = "Visor de Sistema NoSQL";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var listaColecciones = ViewBag.Colecciones as List<string>;
+}
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-database text-warning"></i> Visor de Colecciones del Sistema
+        </h5>
+        <span class="badge bg-secondary">Motor: MongoDB</span>
+    </div>
+
+    <div class="card-body bg-light">
+
+        <div class="row mb-4 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label fw-bold"><i class="fas fa-search"></i> Seleccione Colección a Inspeccionar:</label>
+                <div class="input-group">
+                    <select id="selectColeccion" class="form-select border-primary">
+                        <option value="">-- Seleccionar --</option>
+                        @if (listaColecciones != null)
+                        {
+                            foreach (var col in listaColecciones)
+                            {
+                                <option value="@col">@col</option>
+                            }
+                        }
+                    </select>
+                    <button class="btn btn-primary" onclick="cargarDatos()">
+                        <i class="fas fa-sync-alt"></i> Cargar
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-7 text-end">
+                <div class="alert alert-info py-2 mb-0 d-inline-block small">
+                    <i class="fas fa-info-circle"></i> Este visor demuestra la capacidad <strong>Schemaless</strong> de NoSQL.
+                    Las columnas se generan dinámicamente según los datos.
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <div class="table-responsive bg-white p-3 rounded shadow-sm">
+            <table id="tablaDinamica" class="table table-hover table-striped w-100" style="font-size: 0.9rem;">
+                <thead class="table-dark">
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        let tablaInstancia = null;
+
+        function cargarDatos() {
+            var coleccion = document.getElementById('selectColeccion').value;
+
+            if (!coleccion) {
+                Swal.fire('Atención', 'Seleccione una colección primero', 'warning');
+                return;
+            }
+
+            // Mostrar Loading
+            let timerInterval;
+            Swal.fire({
+                title: 'Consultando MongoDB...',
+                html: 'Recuperando documentos de <b>' + coleccion + '</b>',
+                timerProgressBar: true,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            // Petición AJAX al Controlador
+            fetch(`@Url.Action("ObtenerDatosColeccion", "Reportes")?nombreColeccion=${coleccion}`)
+                .then(response => {
+                    if (!response.ok) throw new Error("Error de red o servidor");
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.close();
+                    construirTabla(data);
+                })
+                .catch(error => {
+                    Swal.fire('Error', 'No se pudieron cargar los datos: ' + error, 'error');
+                });
+        }
+
+        function construirTabla(datos) {
+            // 1. Destruir tabla anterior si existe
+            if (tablaInstancia) {
+                tablaInstancia.destroy();
+                $('#tablaDinamica').empty(); // Limpiar HTML del DOM
+            }
+
+            if (!datos || datos.length === 0) {
+                $('#tablaDinamica').html('<thead class="table-dark"><tr><th>Resultado</th></tr></thead><tbody><tr><td>La colección está vacía</td></tr></tbody>');
+                return;
+            }
+
+            // 2. DETECTAR COLUMNAS DINÁMICAMENTE (Magia NoSQL)
+            // Tomamos el primer registro como referencia para los encabezados
+            let columnas = Object.keys(datos[0]).map(key => {
+                return {
+                    title: key.toUpperCase(),
+                    data: key,
+                    defaultContent: "<i>-</i>", // Si un documento no tiene este campo
+                    render: function(data) {
+                        // Si el dato es muy largo (ej. PasswordHash), lo cortamos
+                        if (typeof data === 'string' && data.length > 50) {
+                            return `<span title="${data}">${data.substring(0, 50)}...</span>`;
+                        }
+                        return data;
+                    }
+                };
+            });
+
+            // 3. Inicializar DataTables
+            tablaInstancia = $('#tablaDinamica').DataTable({
+                data: datos,
+                columns: columnas,
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
+                scrollX: true, // Permitir scroll horizontal si hay muchas columnas
+                dom: 'Bfrtip', // Habilitar barra de botones
+                buttons: [
+                    { extend: 'excel', text: '<i class="fas fa-file-excel"></i> Excel', className: 'btn btn-success btn-sm' },
+                    { extend: 'print', text: '<i class="fas fa-print"></i> Imprimir', className: 'btn btn-secondary btn-sm' },
+                    { extend: 'copy', text: '<i class="fas fa-copy"></i> Copiar', className: 'btn btn-light btn-sm' }
+                ],
+                pageLength: 10
+            });
+        }
+    </script>
+}

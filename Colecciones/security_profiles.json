@@ -1,0 +1,59 @@
+[
+  {
+    "codigo_perfil": "ADM",
+    "nombre_perfil": "Administrador",
+    "descripcion": "Control Total",
+    "accesos": [
+      {
+        "sistema_ref": "P",
+        "opciones_permitidas": ["ASI", "LIS", "MAT", "NOT"]
+      },
+      {
+        "sistema_ref": "A",
+        "opciones_permitidas": ["CAR", "CUR", "DEP", "EST", "ROL", "USU"]
+      },
+      {
+        "sistema_ref": "R",
+        "opciones_permitidas": ["RAC", "RSE"]
+      }
+    ]
+  },
+  {
+    "codigo_perfil": "DOC",
+    "nombre_perfil": "Docente",
+    "descripcion": "Gestión académica",
+    "accesos": [
+      {
+        "sistema_ref": "P",
+        "opciones_permitidas": ["ASI", "LIS", "MAT", "NOT"]
+      },
+      {
+        "sistema_ref": "A",
+        "opciones_permitidas": ["CAR", "CUR", "DEP", "EST"]
+      },
+      {
+        "sistema_ref": "R",
+        "opciones_permitidas": ["RAC", "RSE"]
+      }
+    ]
+  },
+  {
+    "codigo_perfil": "SEC",
+    "nombre_perfil": "Secretaria",
+    "descripcion": "Gestión administrativa",
+    "accesos": [
+      {
+        "sistema_ref": "A",
+        "opciones_permitidas": ["CAR", "CUR", "DEP", "EST"]
+      },
+      {
+        "sistema_ref": "P",
+        "opciones_permitidas": ["NOT"] 
+      },
+      {
+        "sistema_ref": "R",
+        "opciones_permitidas": ["RAC", "RSE"]
+      }
+    ]
+  }
+]
