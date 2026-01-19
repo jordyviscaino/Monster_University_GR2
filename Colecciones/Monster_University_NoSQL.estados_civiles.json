@@ -1,0 +1,35 @@
+[{
+  "_id": {
+    "$oid": "6967bd4fd3d7c533e2a24371"
+  },
+  "codigo": "C",
+  "descripcion": "Casado"
+},
+{
+  "_id": {
+    "$oid": "6967bd4fd3d7c533e2a24372"
+  },
+  "codigo": "D",
+  "descripcion": "Divorciado"
+},
+{
+  "_id": {
+    "$oid": "6967bd4fd3d7c533e2a24373"
+  },
+  "codigo": "S",
+  "descripcion": "Soltero"
+},
+{
+  "_id": {
+    "$oid": "6967bd4fd3d7c533e2a24374"
+  },
+  "codigo": "U",
+  "descripcion": "Unión Libre"
+},
+{
+  "_id": {
+    "$oid": "6967bd4fd3d7c533e2a24375"
+  },
+  "codigo": "V",
+  "descripcion": "Viudo"
+}]

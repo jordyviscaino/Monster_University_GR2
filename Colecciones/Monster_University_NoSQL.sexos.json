@@ -1,0 +1,14 @@
+[{
+  "_id": {
+    "$oid": "6967bd4fd3d7c533e2a2436f"
+  },
+  "codigo": "F",
+  "descripcion": "Femenino"
+},
+{
+  "_id": {
+    "$oid": "6967bd4fd3d7c533e2a24370"
+  },
+  "codigo": "M",
+  "descripcion": "Masculino"
+}]

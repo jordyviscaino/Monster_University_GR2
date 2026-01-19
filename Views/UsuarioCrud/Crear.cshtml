@@ -1,0 +1,60 @@
+@model Monster_University_GR2.CapaEntidad.UsuarioCreateViewModel
+@{
+    ViewBag.Title = "Crear Usuario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h5 class="mb-0">Crear Usuario</h5>
+    </div>
+    <div class="card-body">
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">@ViewBag.Error</div>
+        }
+
+        <form asp-action="Crear" method="post" class="row g-3">
+            <div class="col-md-4">
+                <label asp-for="Cedula" class="form-label">Cédula</label>
+                <input asp-for="Cedula" class="form-control" />
+                <span asp-validation-for="Cedula" class="text-danger small"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Nombre" class="form-label">Nombres</label>
+                <input asp-for="Nombre" class="form-control" />
+                <span asp-validation-for="Nombre" class="text-danger small"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Apellido" class="form-label">Apellidos</label>
+                <input asp-for="Apellido" class="form-control" />
+                <span asp-validation-for="Apellido" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Password" class="form-label">Contraseña</label>
+                <input asp-for="Password" type="password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="Estado" class="form-label">Estado</label>
+                <input asp-for="Estado" class="form-control" value="ACTIVO" />
+            </div>
+
+            <div class="col-12 text-end">
+                <a class="btn btn-secondary" href="@Url.Action("Index","UsuarioCrud")">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Crear</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

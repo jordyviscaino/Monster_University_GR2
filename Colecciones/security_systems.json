@@ -1,0 +1,28 @@
+[
+  {
+    "nombre_sistema": "Procesos",
+    "codigo_sistema": "P",
+    "estado": "ACTIVO",
+    "icono": "fa-cogs",
+    "opciones": [
+      { "codigo_opcion": "ASI", "titulo": "Asistencia", "url_controlador": "Assistance", "url_accion": "Index" },
+      { "codigo_opcion": "LIS", "titulo": "Listas Clase", "url_controlador": "ClassList", "url_accion": "Index" },
+      { "codigo_opcion": "MAT", "titulo": "Matrícula", "url_controlador": "Enrollment", "url_accion": "Create" },
+      { "codigo_opcion": "NOT", "titulo": "Notas", "url_controlador": "Grades", "url_accion": "Index" }
+    ]
+  },
+  {
+    "nombre_sistema": "Administración",
+    "codigo_sistema": "A",
+    "estado": "ACTIVO",
+    "icono": "fa-building",
+    "opciones": [
+      { "codigo_opcion": "CAR", "titulo": "Carga Docente", "url_controlador": "Workload", "url_accion": "Index" },
+      { "codigo_opcion": "CUR", "titulo": "Cursos", "url_controlador": "Course", "url_accion": "Index" },
+      { "codigo_opcion": "DEP", "titulo": "Departamentos", "url_controlador": "Department", "url_accion": "Index" },
+      { "codigo_opcion": "EST", "titulo": "Estudiantes", "url_controlador": "Student", "url_accion": "Index" },
+      { "codigo_opcion": "ROL", "titulo": "Asignar Roles", "url_controlador": "Role", "url_accion": "Assign" },
+      { "codigo_opcion": "USU", "titulo": "Gestión Usuarios", "url_controlador": "User", "url_accion": "Index" }
+    ]
+  }
+]

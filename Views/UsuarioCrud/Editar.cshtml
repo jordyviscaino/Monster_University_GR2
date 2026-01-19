@@ -1,0 +1,65 @@
+@model Monster_University_GR2.CapaEntidad.UsuarioEditViewModel
+@{
+    ViewBag.Title = "Editar Usuario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between">
+        <h5 class="mb-0">Editar Usuario</h5>
+        <span class="badge bg-light text-primary">@Model.Cedula</span>
+    </div>
+    <div class="card-body">
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">@ViewBag.Error</div>
+        }
+
+        <form asp-action="Editar" method="post" class="row g-3">
+            <input type="hidden" asp-for="Cedula" />
+
+            <div class="col-md-4">
+                <label asp-for="Nombre" class="form-label">Nombres</label>
+                <input asp-for="Nombre" class="form-control" />
+                <span asp-validation-for="Nombre" class="text-danger small"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Apellido" class="form-label">Apellidos</label>
+                <input asp-for="Apellido" class="form-control" />
+                <span asp-validation-for="Apellido" class="text-danger small"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Género</label>
+                <select asp-for="SexoCodigo" class="form-select" asp-items="ViewBag.ListaSexos">
+                    <option value="">-- Seleccione --</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Estado Civil</label>
+                <select asp-for="EstadoCivilCodigo" class="form-select" asp-items="ViewBag.ListaEstados">
+                    <option value="">-- Seleccione --</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Celular" class="form-label">Celular</label>
+                <input asp-for="Celular" class="form-control" />
+            </div>
+
+            <div class="col-12 text-end">
+                <a class="btn btn-secondary" href="@Url.Action("Index","UsuarioCrud")">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

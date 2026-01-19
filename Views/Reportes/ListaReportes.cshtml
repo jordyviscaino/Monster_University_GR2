@@ -1,0 +1,108 @@
+﻿@model List<Monster_University_GR2.CapaEntidad.EstudianteResumenDTO>
+@{
+    ViewBag.Title = "Reportes Académicos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0"><i class="fas fa-file-invoice"></i> Reportes Académicos</h5>
+    </div>
+    <div class="card-body">
+        <table id="tablaReportes" class="table table-hover align-middle" style="width:100%">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Estudiante</th>
+                    <th>Carrera</th>
+                    <th class="text-center">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-bold">@item.CodigoEstudiante</td>
+                        <td>@item.NombreCompleto</td>
+                        <td><span class="badge bg-info text-dark">@item.Carrera</span></td>
+                        <td class="text-center">
+                            <button type="button"
+                                    onclick="abrirModalReporte('@item.CodigoEstudiante')"
+                                    class="btn btn-danger btn-sm text-white">
+                                <i class=\"fas fa-eye\"></i> Vista Previa
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalReporte" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Ficha Académica</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="contenedorReporte">
+                <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="imprimirConLibreria()">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://printjs-4de6.kxcdn.com/print.min.js"></script>
+    <link rel="stylesheet" href="https://printjs-4de6.kxcdn.com/print.min.css">
+
+    <script>
+        $(document).ready(function () {
+            $('#tablaReportes').DataTable({
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' }
+            });
+        });
+
+        function abrirModalReporte(cedula) {
+            var modal = new bootstrap.Modal(document.getElementById('modalReporte'));
+            var contenedor = document.getElementById('contenedorReporte');
+            modal.show();
+
+            contenedor.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p>Generando reporte...</p></div>';
+
+            // LLAMADA AL CONTROLADOR
+            fetch('@Url.Action("VerBoletin", "Reportes")?id=' + cedula)
+                .then(response => response.text())
+                .then(html => {
+                    contenedor.innerHTML = html;
+                })
+                .catch(err => {
+                    contenedor.innerHTML = '<div class="alert alert-danger">Error al cargar reporte.</div>';
+                });
+        }
+
+        function imprimirConLibreria() {
+            printJS({
+                printable: 'areaImpresionReporte',
+                type: 'html',
+                scanStyles: true,
+                targetStyles: ['*'],
+                documentTitle: 'Boletin_Academico',
+                style: `
+                    @@page { size: A4; margin: 15mm; }
+                    body { font-family: 'Times New Roman'; }
+                `
+            });
+        }
+    </script>
+}

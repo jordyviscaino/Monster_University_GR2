@@ -1,0 +1,326 @@
+﻿@model Monster_University_GR2.Models.UsuarioCrearCompletoViewModel
+
+@{
+    ViewBag.Title = "Ficha de Registro";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* ===== ESTILOS PARA TABS Y PANELES ===== */
+    .tab-wrapper {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+
+    .nav-tabs {
+        border-bottom: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        padding-left: 10px;
+    }
+
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px 6px 0 0;
+            margin-right: 4px;
+            padding: 12px 20px;
+            transition: all 0.2s ease-in-out;
+        }
+
+            .nav-tabs .nav-link:hover {
+                color: #004aad;
+                background-color: #e9ecef;
+            }
+
+            .nav-tabs .nav-link.active {
+                color: #004aad;
+                background-color: #fff;
+                border: 1px solid #dee2e6;
+                border-bottom: 1px solid #fff;
+            }
+
+    .tab-content {
+        padding: 25px;
+        background-color: #fff;
+    }
+
+    .header-card {
+        background-color: #f8f9fa;
+        border-left: 5px solid #004aad;
+    }
+
+    /* Animación para mostrar/ocultar secciones */
+    .seccion-dinamica {
+        display: none;
+        animation: fadeIn 0.5s;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+
+
+<div class="container mt-4 mb-5">
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong><i class="fas fa-exclamation-triangle"></i> Atención:</strong> Revisa los campos marcados.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div asp-validation-summary="All" class="small mt-1"></div>
+        </div>
+    }
+
+    <form asp-action="Crear" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+
+        <div class="card shadow-sm border-0 mb-4 header-card">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+
+                    <div class="col-md-2 text-center">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                             id="previewFoto"
+                             class="img-thumbnail rounded-circle shadow-sm mb-2"
+                             style="width:100px;height:100px;object-fit:cover;" />
+
+                        <label class="btn btn-sm btn-outline-primary w-100">
+                            <i class="fas fa-camera"></i> Subir Foto
+                            <input type="file" name="archivoFoto" hidden accept="image/*" onchange="previewImage(this)" />
+                        </label>
+                    </div>
+
+                    <div class="col-md-10">
+                        <div class="row g-3">
+                            <div class="col-12 border-bottom pb-2">
+                                <label class="fw-bold me-3">Tipo de Usuario:</label>
+
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" asp-for="TipoUsuario" value="EST" id="radioEst" checked onchange="toggleFormulario()">
+                                    <label class="form-check-label" for="radioEst">Estudiante</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" asp-for="TipoUsuario" value="EMP" id="radioEmp" onchange="toggleFormulario()">
+                                    <label class="form-check-label" for="radioEmp">Empleado</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Cédula *</label>
+                                <input asp-for="Cedula" class="form-control" placeholder="Ej. 1700..." required />
+                                <span asp-validation-for="Cedula" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Nombres *</label>
+                                <input asp-for="Nombres" class="form-control text-uppercase" placeholder="Nombres Completos" required />
+                                <span asp-validation-for="Nombres" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Apellidos *</label>
+                                <input asp-for="Apellidos" class="form-control text-uppercase" placeholder="Apellidos Completos" required />
+                                <span asp-validation-for="Apellidos" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> @ViewBag.Error
+            </div>
+        }
+
+        <div class="tab-wrapper mb-4">
+
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#datos" type="button">
+                        <i class="fas fa-address-card me-1"></i> Información Personal
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#perfil" type="button">
+                        <i class="fas fa-user-graduate me-1"></i> <span id="lblTabPerfil">Perfil Académico</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#seguridad" type="button">
+                        <i class="fas fa-user-lock me-1"></i> Cuenta
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <div class="tab-pane fade show active" id="datos">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha Nacimiento</label>
+                            <input asp-for="FechaNacimiento" type="date" class="form-control" />
+                            <span asp-validation-for="FechaNacimiento" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Sexo</label>
+                            <select asp-for="SexoCodigo" asp-items="ViewBag.ListaSexos" class="form-select">
+                                <option value="">-- Seleccione --</option>
+                            </select>
+                            <span asp-validation-for="SexoCodigo" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Estado Civil</label>
+                            <select asp-for="EstadoCivilCodigo" asp-items="ViewBag.ListaEstadoCivil" class="form-select">
+                                <option value="">-- Seleccione --</option>
+                            </select>
+                            <span asp-validation-for="EstadoCivilCodigo" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label">Dirección Domiciliaria</label>
+                            <input asp-for="Direccion" class="form-control text-uppercase" placeholder="Calle principal, secundaria y número" />
+                            <span asp-validation-for="Direccion" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Teléfono de Contacto</label>
+                            <input asp-for="Telefono" class="form-control" placeholder="099..." />
+                            <span asp-validation-for="Telefono" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="perfil">
+
+                    <div id="bloqueEstudiante" class="seccion-dinamica">
+
+                        <div class="alert alert-info d-flex align-items-center">
+                            <i class="fas fa-tools me-3 fs-3"></i>
+                            <div>
+                                <strong>Módulo en Construcción:</strong><br>
+                                La asignación detallada de carrera y semestre se habilitará pronto. Se asignarán valores por defecto.
+                            </div>
+                        </div>
+
+                        <div class="row g-3 opacity-50">
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold">Carrera</label>
+                                <select asp-for="CarreraID" asp-items="ViewBag.ListaCarreras" class="form-select" disabled>
+                                    <option value="">Ingeniería (Default)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Semestre Actual</label>
+                                <input asp-for="Semestre" type="number" class="form-control" value="1" disabled />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="bloqueEmpleado" class="seccion-dinamica">
+                        <div class="alert alert-warning py-2"><i class="fas fa-briefcase"></i> Datos Laborales y Accesos</div>
+                        <div class="row g-3">
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-danger">Perfil de Acceso (Rol) *</label>
+                                <select asp-for="RolSeleccionado" asp-items="ViewBag.ListaRoles" class="form-select border-danger">
+                                    <option value="">-- Seleccione el nivel de acceso --</option>
+                                </select>
+                                <small class="text-muted">Determina qué módulos podrá ver el usuario.</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Departamento</label>
+                                <select asp-for="Departamento" asp-items="ViewBag.ListaDepartamentos" class="form-select">
+                                    <option value="">-- Automático según Rol --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Cargo</label>
+                                <input asp-for="Cargo" class="form-control" placeholder="Se asignará automáticamente" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="seguridad">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Correo Institucional *</label>
+                            <input asp-for="Email" class="form-control" placeholder="usuario@monster.edu.ec" required />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Contraseña Temporal *</label>
+                            <input asp-for="Password" type="password" class="form-control" value="Monster2024*" required />
+                            <small class="text-muted">Se sugiere una clave por defecto que el usuario cambiará luego.</small>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="text-end">
+            <a href="@Url.Action("Index")" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success fw-bold px-4">
+                <i class="fas fa-save me-1"></i> Guardar Ficha
+            </button>
+        </div>
+
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // 1. Previsualizar Foto
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => document.getElementById('previewFoto').src = e.target.result;
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // 2. Lógica para mostrar campos de Estudiante o Empleado
+        function toggleFormulario() {
+            var esEstudiante = document.getElementById("radioEst").checked;
+
+            var bloqueEst = document.getElementById("bloqueEstudiante");
+            var bloqueEmp = document.getElementById("bloqueEmpleado");
+            var labelTab = document.getElementById("lblTabPerfil");
+
+            if (esEstudiante) {
+                bloqueEst.style.display = "block";
+                bloqueEmp.style.display = "none";
+                labelTab.innerText = "Perfil Académico";
+            } else {
+                bloqueEst.style.display = "none";
+                bloqueEmp.style.display = "block";
+                labelTab.innerText = "Perfil Laboral";
+            }
+        }
+
+        // Ejecutar al inicio para asegurar estado correcto
+        document.addEventListener("DOMContentLoaded", function() {
+            toggleFormulario();
+        });
+    </script>
+}
